@@ -12,6 +12,30 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.7.0]
+
+### Added
+
+- Visiting `/freecell` with no `?number=` now jumps straight to the next
+  *unplayed* game in the sequence (the first gap in win history, starting
+  from #1), instead of whatever the site defaults to. The next-game button
+  targets the same number, so it skips over already-won games rather than
+  always being `current + 1`. (FCPLUS-8)
+- The next-game button, tracker and Export/Import are now mounted directly
+  in the site's own topbar (`#topoptions`'s container) and status bar
+  (`#bsbInner`), reusing its real button markup
+  (`.generalButton`/`.generalButtonBody`/`.generalButtonFace`/
+  `.generalButtonOverlay`/`.generalButtonContent`) and `.statusBarLabels`
+  class, now that those elements are confirmed to exist — closes FCPLUS-3.
+  Replaces the earlier fixed-position floating widget entirely.
+
+### Fixed
+
+- `localStorage` keys are now namespaced under `fcplus:`; a one-time
+  migration copies over any data already sitting under the unnamespaced
+  `freecellLastWon`/`freecellWinningHistory` keys so existing win history
+  isn't orphaned by the rename. (FCPLUS-8)
+
 ## [0.6.0]
 
 ### Added

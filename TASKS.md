@@ -3,7 +3,7 @@
 Every task carries an ID of the form `FCPLUS-<n>`. IDs are assigned once, never
 reused, and never renumbered.
 
-**Next ID to assign: `FCPLUS-8`**
+**Next ID to assign: `FCPLUS-9`**
 
 If this file and history ever disagree, history wins:
 
@@ -29,8 +29,7 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 
 | ID | Task | Status | Commit |
 | --- | --- | --- | --- |
-| FCPLUS-3 | Move the next-game button into the game's own button bar instead of floating fixed | open | — |
-| FCPLUS-5 | Use win history for stats (e.g. "X/100 completed") or to target the next unplayed game | open | — |
+| FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | open | — |
 
 ## Done
 
@@ -41,3 +40,5 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | FCPLUS-4 | Remember the last won game and win history in localStorage | done | 2026-09-16 | — |
 | FCPLUS-6 | Export/import win history to a JSON file | done | 2026-09-16 | — |
 | FCPLUS-7 | Record time/score/moves per win; narrow the export/import buttons | done | 2026-09-16 | — |
+| FCPLUS-3 | Move the next-game button into the game's own button bar instead of floating fixed | done | 2026-09-16 | — |
+| FCPLUS-8 | Sequential next-unplayed-game logic; mount the tracker/buttons in the confirmed native topbar | done | 2026-09-16 | — |

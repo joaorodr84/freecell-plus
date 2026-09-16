@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.6.0
+// @version      0.7.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -12,34 +12,49 @@
   'use strict';
 
   const BASE_URL = 'https://www.solitairebliss.com/freecell';
-  const BUTTON_ID = 'fcplus-next-game-button';
-  const LAST_WON_LABEL_ID = 'fcplus-last-won-label';
-  const TOOLS_ROW_ID = 'fcplus-tools-row';
 
-  // Namespaced to avoid colliding with any localStorage keys the site
-  // itself (or another userscript) might use.
   const STORAGE_LAST_WON = 'fcplus:lastWon';
   const STORAGE_WIN_HISTORY = 'fcplus:winHistory';
 
-  // Solitaire Bliss's own palette/type, lifted from its computed styles,
-  // so the button reads as part of the site rather than a bolted-on
-  // userscript widget.
-  const COLOR_PRIMARY = '#804817';
-  const COLOR_PRIMARY_HOVER_BG = '#f1f0e3';
-  const BORDER_RADIUS_SMALL = '8px';
+  // Pre-repo prototyping accumulated real win history under these
+  // unnamespaced keys — migrated once (see migrateLegacyStorage) so
+  // moving to fcplus: doesn't orphan it.
+  const LEGACY_STORAGE_LAST_WON = 'freecellLastWon';
+  const LEGACY_STORAGE_WIN_HISTORY = 'freecellWinningHistory';
+
+  // Colours confirmed against the site's own topbar buttons rather than
+  // guessed: COLOR_ACCENT/HOVER_BG are the hover state, COLOR_LABEL_IDLE
+  // is the idle label colour those same buttons use.
+  const COLOR_ACCENT = '#804817';
+  const COLOR_ACCENT_HOVER_BG = '#f1f0e3';
+  const COLOR_LABEL_IDLE = '#9e3c06';
 
   let gameWon = false;
 
-  function getCurrentNumber() {
+  function getGameNumber() {
     const number = parseInt(new URLSearchParams(window.location.search).get('number'), 10);
     return Number.isFinite(number) && number >= 1 ? number : 1;
   }
 
-  const currentGame = getCurrentNumber();
-  const nextGame = currentGame + 1;
+  function isBaseGameUrl() {
+    return !new URLSearchParams(window.location.search).has('number');
+  }
 
-  function goToNextGame() {
-    window.location.href = `${BASE_URL}?number=${nextGame}`;
+  const currentGame = getGameNumber();
+
+  function migrateLegacyStorage() {
+    if (localStorage.getItem(STORAGE_WIN_HISTORY) !== null) {
+      return;
+    }
+
+    const legacyHistory = localStorage.getItem(LEGACY_STORAGE_WIN_HISTORY);
+    const legacyLastWon = localStorage.getItem(LEGACY_STORAGE_LAST_WON);
+    if (legacyHistory !== null) {
+      localStorage.setItem(STORAGE_WIN_HISTORY, legacyHistory);
+    }
+    if (legacyLastWon !== null) {
+      localStorage.setItem(STORAGE_LAST_WON, legacyLastWon);
+    }
   }
 
   function getLastWon() {
@@ -54,6 +69,21 @@
     } catch {
       return [];
     }
+  }
+
+  // The sequence always starts at #1 and skips whatever's already been
+  // won, so a gap (won 1,2,3,7) resumes at 4, not 8.
+  function getNextSequentialGame() {
+    const won = new Set(getWinHistory().map((entry) => entry.game));
+    let next = 1;
+    while (won.has(next)) {
+      next++;
+    }
+    return next;
+  }
+
+  function loadNextSequentialGame() {
+    window.location.replace(`${BASE_URL}?number=${getNextSequentialGame()}`);
   }
 
   // The end-game dialog (confirmed via its actual markup) reports these
@@ -184,175 +214,218 @@
     input.click();
   }
 
-  function createButton() {
-    if (document.getElementById(BUTTON_ID)) {
+  function insertIntoTopBar(element) {
+    const options = document.getElementById('topoptions');
+    if (options && options.parentElement) {
+      options.parentElement.appendChild(element);
       return;
     }
 
-    const button = document.createElement('button');
-    button.id = BUTTON_ID;
-    button.type = 'button';
-    button.textContent = `PRÓXIMO JOGO #${nextGame}`;
+    const topBar = document.getElementById('gameTopBar');
+    if (topBar) {
+      topBar.appendChild(element);
+    }
+  }
+
+  // Solitaire Bliss's own topbar buttons are built from this exact
+  // body/face/overlay/content structure (confirmed by inspecting the
+  // real page) — reusing it, rather than a plain <button>, is what makes
+  // ours read as native instead of bolted on.
+  function createTopBarButton(id, label) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'gameTopBarBtnsWrap';
+
+    const button = document.createElement('div');
+    button.id = id;
+    button.className = 'generalButton displayInlineFlex';
+
+    const body = document.createElement('div');
+    body.className = 'generalButtonBody';
+    const face = document.createElement('div');
+    face.className = 'generalButtonFace';
+    const overlay = document.createElement('div');
+    overlay.className = 'generalButtonOverlay';
+    const content = document.createElement('div');
+    content.className = 'generalButtonContent';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.id = `${id}-label`;
+    labelSpan.textContent = label;
+    content.appendChild(labelSpan);
+
+    button.append(body, face, overlay, content);
+    wrapper.appendChild(button);
+
+    return { wrapper, button };
+  }
+
+  function createNextButton() {
+    if (document.getElementById('fcplus-next')) {
+      return;
+    }
+
+    const { wrapper, button } = createTopBarButton(
+      'fcplus-next',
+      `PRÓXIMO #${getNextSequentialGame()}`
+    );
 
     Object.assign(button.style, {
-      position: 'fixed',
-      right: '22px',
-      bottom: '22px',
-      zIndex: '2147483647',
-
-      display: 'flex',
+      height: '45px',
+      minWidth: '120px',
+      padding: '0 10px',
+      display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      height: '45px',
-      minWidth: '190px',
-      padding: '0 16px',
-      boxSizing: 'border-box',
-
-      backgroundColor: COLOR_PRIMARY,
-      color: '#fff7e9',
-      border: 'none',
-      borderRadius: BORDER_RADIUS_SMALL,
+      position: 'relative',
 
       fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
-      fontSize: '20px',
+      fontSize: '24px',
       fontWeight: '700',
-      lineHeight: '1',
       textTransform: 'uppercase',
-      whiteSpace: 'nowrap',
+      color: COLOR_LABEL_IDLE,
 
-      cursor: 'default',
-      filter: 'drop-shadow(0 0 3px rgba(0, 0, 0, 0.5))',
+      border: 'none',
+      borderRadius: '14px',
+      backgroundColor: 'transparent',
+      boxShadow: 'none',
+
+      // Only interactive once gameWon is true — see setWon().
+      cursor: 'not-allowed',
+      opacity: '0.45',
       userSelect: 'none',
-      transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
+      transition: 'background-color 0.1s ease, color 0.1s ease',
     });
 
-    // Only interactive once gameWon is true — see setWon().
     button.addEventListener('mouseenter', () => {
       if (!gameWon) {
         return;
       }
-      button.style.backgroundColor = COLOR_PRIMARY_HOVER_BG;
-      button.style.color = COLOR_PRIMARY;
+      button.style.backgroundColor = COLOR_ACCENT_HOVER_BG;
+      button.style.color = COLOR_ACCENT;
     });
-
     button.addEventListener('mouseleave', () => {
       if (!gameWon) {
         return;
       }
-      button.style.backgroundColor = COLOR_PRIMARY;
-      button.style.color = '#fff7e9';
+      button.style.backgroundColor = 'transparent';
+      button.style.color = COLOR_LABEL_IDLE;
     });
-
     button.addEventListener('click', () => {
       if (!gameWon) {
         return;
       }
-      goToNextGame();
+      window.location.href = `${BASE_URL}?number=${getNextSequentialGame()}`;
     });
 
-    document.body.appendChild(button);
+    insertIntoTopBar(wrapper);
   }
 
-  function createLastWonLabel() {
-    if (document.getElementById(LAST_WON_LABEL_ID)) {
+  function createUtilityButton(id, label, title, onClick) {
+    if (document.getElementById(id)) {
       return;
     }
 
-    const label = document.createElement('div');
-    label.id = LAST_WON_LABEL_ID;
+    const { wrapper, button } = createTopBarButton(id, label);
+    button.title = title;
 
-    Object.assign(label.style, {
-      position: 'fixed',
-      right: '22px',
-      bottom: '75px',
-      zIndex: '2147483647',
-
-      padding: '4px 10px',
-      backgroundColor: '#fff7e9',
-      color: COLOR_PRIMARY,
-      border: `1px solid ${COLOR_PRIMARY}`,
-      borderRadius: BORDER_RADIUS_SMALL,
+    Object.assign(button.style, {
+      height: '45px',
+      padding: '0 8px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
 
       fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
-      fontSize: '14px',
+      fontSize: '24px',
       fontWeight: '700',
       textTransform: 'uppercase',
-      whiteSpace: 'nowrap',
+      color: COLOR_LABEL_IDLE,
+
+      border: 'none',
+      borderRadius: '14px',
+      backgroundColor: 'transparent',
+      cursor: 'pointer',
       userSelect: 'none',
+      transition: 'background-color 0.1s ease, color 0.1s ease',
     });
 
-    document.body.appendChild(label);
+    button.addEventListener('click', onClick);
+    button.addEventListener('mouseenter', () => {
+      button.style.backgroundColor = COLOR_ACCENT_HOVER_BG;
+      button.style.color = COLOR_ACCENT;
+    });
+    button.addEventListener('mouseleave', () => {
+      button.style.backgroundColor = 'transparent';
+      button.style.color = COLOR_LABEL_IDLE;
+    });
+
+    insertIntoTopBar(wrapper);
+  }
+
+  function createImportExportButtons() {
+    createUtilityButton('fcplus-export', 'Exportar', 'Exportar histórico', exportHistory);
+    createUtilityButton('fcplus-import', 'Importar', 'Importar histórico', importHistory);
+  }
+
+  // Mounted into #bsbInner (the game's own status-bar area) rather than
+  // floating, and reuses its .statusBarLabels class — the same one the
+  // real Time/Score/Moves labels use — for visual consistency.
+  function createTracker() {
+    if (document.getElementById('fcplus-tracker')) {
+      return;
+    }
+
+    const inner = document.getElementById('bsbInner');
+    if (!inner) {
+      return;
+    }
+
+    const tracker = document.createElement('div');
+    tracker.id = 'fcplus-tracker';
+
+    Object.assign(tracker.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '40px',
+      boxSizing: 'border-box',
+      padding: '4px 16px',
+      backgroundColor: 'rgba(0, 0, 0, 0.12)',
+
+      fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
+      fontSize: '24px',
+      fontWeight: '700',
+      color: '#000',
+      whiteSpace: 'nowrap',
+
+      userSelect: 'none',
+      flexShrink: '0',
+    });
+
+    const label = document.createElement('span');
+    label.id = 'fcplus-last-won-label';
+    label.className = 'statusBarLabels';
+    tracker.appendChild(label);
+
+    const reportBug = document.getElementById('bsbReportBug');
+    if (reportBug) {
+      inner.insertBefore(tracker, reportBug);
+    } else {
+      inner.appendChild(tracker);
+    }
+
     updateLastWonLabel();
   }
 
   function updateLastWonLabel() {
-    const label = document.getElementById(LAST_WON_LABEL_ID);
+    const label = document.getElementById('fcplus-last-won-label');
     if (!label) {
       return;
     }
 
     const lastWon = getLastWon();
     label.textContent = lastWon !== null ? `Último ganho: #${lastWon}` : 'Último ganho: —';
-  }
-
-  function createToolButton(label, onClick) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = label;
-
-    Object.assign(button.style, {
-      height: '28px',
-      padding: '0 8px',
-      border: 'none',
-      borderRadius: BORDER_RADIUS_SMALL,
-
-      backgroundColor: COLOR_PRIMARY,
-      color: '#fff7e9',
-
-      fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
-      fontSize: '13px',
-      fontWeight: '700',
-      textTransform: 'uppercase',
-
-      cursor: 'pointer',
-      userSelect: 'none',
-      transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
-    });
-
-    button.addEventListener('mouseenter', () => {
-      button.style.backgroundColor = COLOR_PRIMARY_HOVER_BG;
-      button.style.color = COLOR_PRIMARY;
-    });
-    button.addEventListener('mouseleave', () => {
-      button.style.backgroundColor = COLOR_PRIMARY;
-      button.style.color = '#fff7e9';
-    });
-    button.addEventListener('click', onClick);
-
-    return button;
-  }
-
-  function createToolsRow() {
-    if (document.getElementById(TOOLS_ROW_ID)) {
-      return;
-    }
-
-    const row = document.createElement('div');
-    row.id = TOOLS_ROW_ID;
-
-    Object.assign(row.style, {
-      position: 'fixed',
-      right: '22px',
-      bottom: '108px',
-      zIndex: '2147483647',
-      display: 'flex',
-      gap: '8px',
-    });
-
-    row.appendChild(createToolButton('Exportar', exportHistory));
-    row.appendChild(createToolButton('Importar', importHistory));
-
-    document.body.appendChild(row);
   }
 
   function setWon() {
@@ -364,13 +437,14 @@
     recordWin(currentGame, getGameStatistics());
     updateLastWonLabel();
 
-    const button = document.getElementById(BUTTON_ID);
-    if (!button) {
+    const button = document.getElementById('fcplus-next');
+    const label = document.getElementById('fcplus-next-label');
+    if (!button || !label) {
       return;
     }
 
-    button.textContent = `PRÓXIMO JOGO #${nextGame} →`;
-    button.style.cursor = 'pointer';
+    label.textContent = `PRÓXIMO #${getNextSequentialGame()} →`;
+    Object.assign(button.style, { cursor: 'pointer', opacity: '1' });
   }
 
   // The win screen has no dedicated marker, but it does render a
@@ -399,9 +473,19 @@
   }
 
   function init() {
-    createButton();
-    createLastWonLabel();
-    createToolsRow();
+    migrateLegacyStorage();
+
+    // Bare /freecell (no ?number=) jumps straight to the next unplayed
+    // game in the sequence instead of landing on whatever number the
+    // site defaults to.
+    if (isBaseGameUrl()) {
+      loadNextSequentialGame();
+      return;
+    }
+
+    createTracker();
+    createNextButton();
+    createImportExportButtons();
     checkForWin();
 
     new MutationObserver(scheduleWinCheck).observe(document.body, {
@@ -415,5 +499,16 @@
     setInterval(checkForWin, 500);
   }
 
-  init();
+  // #gameTopBar/#bsbInner are rendered by the site's own SPA after load,
+  // not guaranteed to exist yet at document-idle — poll briefly instead
+  // of assuming.
+  function startWhenReady() {
+    if (document.getElementById('gameTopBar') || document.getElementById('bsbInner')) {
+      init();
+      return;
+    }
+    setTimeout(startWhenReady, 100);
+  }
+
+  startWhenReady();
 })();
