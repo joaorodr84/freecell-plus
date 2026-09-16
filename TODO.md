@@ -17,4 +17,6 @@ Every item also carries a `FCPLUS-<n>` ID, registered in [TASKS.md](TASKS.md).
 The ID is claimed when the item is written and stays with it through the commit
 that closes it; the priority changes, the ID never does.
 
-(No open items yet.)
+- **[P3] FCPLUS-3** — Move the next-game button into the game's own button bar
+  (next to "Deal Again") instead of floating fixed bottom-right. Cosmetic only;
+  no known selector for the bar's container yet.

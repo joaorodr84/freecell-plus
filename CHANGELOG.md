@@ -12,6 +12,18 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.3.0]
+
+### Changed
+
+- The next-game button now uses Solitaire Bliss's own colours, type
+  (Open Sans Condensed, uppercase, 700 weight) and sizing, and stays visible
+  (but inert) before a win instead of popping in afterwards. (FCPLUS-2)
+- Win detection now checks for the site's own "Deal Again" button
+  (`.generalButtonContent` with that text) instead of scanning page text for
+  win-related phrases — found by inspecting a completed game, and far less
+  prone to missing a win the phrase list didn't anticipate. (FCPLUS-2)
+
 ## [0.2.0]
 
 ### Added
