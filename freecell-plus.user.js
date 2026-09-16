@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.10.0
+// @version      0.10.1
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -34,13 +34,26 @@
   let gameWon = false;
   let winCheckIntervalId = null;
 
-  function getGameNumber() {
-    const number = parseInt(new URLSearchParams(window.location.search).get('number'), 10);
-    return Number.isFinite(number) && number >= 1 ? number : 1;
+  // Returns null for anything that isn't a real game number (missing,
+  // non-numeric, zero, negative) — a single place both getGameNumber and
+  // isBaseGameUrl rely on, so a malformed ?number= can't be treated as
+  // "valid" by one and "absent" by the other.
+  function parseGameNumber(value) {
+    const number = parseInt(value, 10);
+    return Number.isFinite(number) && number >= 1 ? number : null;
   }
 
+  function getGameNumber() {
+    return parseGameNumber(new URLSearchParams(window.location.search).get('number')) ?? 1;
+  }
+
+  // A malformed ?number= (e.g. ?number=abc) used to count as "has a
+  // number param" here while getGameNumber silently fell back to
+  // treating it as game 1 — a win could then get recorded under the
+  // wrong number instead of redirecting to the real next game.
   function isBaseGameUrl() {
-    return !new URLSearchParams(window.location.search).has('number');
+    const value = new URLSearchParams(window.location.search).get('number');
+    return value === null || parseGameNumber(value) === null;
   }
 
   // Not `const`: syncCurrentGameFromUrl() may reassign this — see there

@@ -38,12 +38,6 @@ that closes it; the priority changes, the ID never does.
   icon source/style decision and fitting into the existing
   `generalButtonContent` structure.
 
-- **[P4] FCPLUS-18** — `?number=abc` (an invalid, non-numeric value)
-  is treated as "has a number param" by `isBaseGameUrl`, so it skips
-  the auto-redirect-to-next-game logic, then `getGameNumber` falls
-  back to treating it as game `1` — which could silently misrecord a
-  win under the wrong number for a malformed URL.
-
 - **[P4] FCPLUS-19** — Reusing the site's own classes (`generalButton`,
   `statusBarLabels`, etc., see `createTopBarButton`/`createTracker`)
   means that if Solitaire Bliss renames or restyles them, our buttons

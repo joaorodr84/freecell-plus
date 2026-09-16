@@ -12,6 +12,18 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.10.1]
+
+### Fixed
+
+- `?number=abc` (or `=0`, `=-5`) counted as "has a number param" for
+  `isBaseGameUrl`, skipping the auto-redirect-to-next-game logic, while
+  `getGameNumber` separately fell back to treating it as game `1` — a win
+  on a malformed URL could get recorded under the wrong number. Both now
+  share a single `parseGameNumber()` validity check, so a malformed value
+  is treated as "base" (redirects to the real next game) instead of
+  silently becoming game 1. (FCPLUS-18)
+
 ## [0.10.0]
 
 ### Added
