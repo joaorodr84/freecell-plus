@@ -12,7 +12,23 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
-## [0.11.1]
+## [0.11.2]
+
+### Fixed
+
+- **Critical regression from 0.11.0 (FCPLUS-19)**: an edit intended for
+  `createUtilityButton` landed in `createTopBarSeparator` instead,
+  calling `warnIfNotVisible(button, ...)` where neither `button` nor
+  `label` exist in scope. Since `createTopBarSeparator()` runs
+  synchronously inside `init()`, this threw a `ReferenceError` and
+  aborted `init()` before the NEXT button, Export/Import buttons, win
+  detection, or the MutationObserver were ever set up — the script did
+  effectively nothing beyond the tracker on every page load between
+  0.11.0 and this version. Moved the call to reference `separator`
+  instead, and added the (correct) missing call in `createUtilityButton`,
+  which had silently never gotten one.
+
+
 
 ### Changed
 

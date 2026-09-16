@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.11.1
+// @version      0.11.2
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -450,6 +450,7 @@
     });
 
     insertIntoTopBar(wrapper);
+    warnIfNotVisible(button, `${label} button`);
   }
 
   // Approximates the divider the native UI shows between button clusters
@@ -476,7 +477,7 @@
 
     wrapper.appendChild(separator);
     insertIntoTopBar(wrapper);
-    warnIfNotVisible(button, `${label} button`);
+    warnIfNotVisible(separator, 'topbar separator');
   }
 
   function createImportExportButtons() {
