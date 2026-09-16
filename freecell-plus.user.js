@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.8.0
+// @version      0.8.1
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -273,7 +273,11 @@
 
     Object.assign(button.style, {
       height: '45px',
-      minWidth: '120px',
+      // Overrides whatever min-width .generalButton itself carries —
+      // the button was visibly wider than UNDO/HINT/NEW even before our
+      // own 120px minWidth was added on top of that.
+      minWidth: '0',
+      boxSizing: 'border-box',
       padding: '0 10px',
       display: 'inline-flex',
       alignItems: 'center',
@@ -332,6 +336,8 @@
 
     Object.assign(button.style, {
       height: '45px',
+      minWidth: '0',
+      boxSizing: 'border-box',
       padding: '0 8px',
       display: 'inline-flex',
       alignItems: 'center',

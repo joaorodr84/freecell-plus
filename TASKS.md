@@ -30,7 +30,6 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | ID | Task | Status | Commit |
 | --- | --- | --- | --- |
 | FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | open | — |
-| FCPLUS-11 | Narrow the custom topbar buttons (NEXT/EXPORT/IMPORT) | open | — |
 | FCPLUS-12 | Add icons to the custom topbar buttons | open | — |
 | FCPLUS-13 | Add a separator before the custom button group in the topbar | open | — |
 | FCPLUS-14 | Stop the win-check interval from polling forever after a win | open | — |
@@ -57,3 +56,4 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | FCPLUS-8 | Sequential next-unplayed-game logic; mount the tracker/buttons in the confirmed native topbar | done | 2026-09-16 | — |
 | FCPLUS-9 | Translate the script's UI text from Portuguese to English | done | 2026-09-16 | — |
 | FCPLUS-10 | Add @updateURL/@downloadURL so Tampermonkey can auto-update from GitHub | done | 2026-09-16 | — |
+| FCPLUS-11 | Narrow the custom topbar buttons (NEXT/EXPORT/IMPORT) | done | 2026-09-16 | — |

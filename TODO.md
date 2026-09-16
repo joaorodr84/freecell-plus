@@ -32,17 +32,6 @@ that closes it; the priority changes, the ID never does.
     real estate and a decision on which stat "wins" (lowest time vs.
     highest score).
 
-- **[P3] FCPLUS-11** — Narrow the custom topbar buttons (`NEXT`,
-  `EXPORT`, `IMPORT`). Screenshot comparison against the native
-  UNDO/HINT/NEW buttons shows ours carrying visibly more horizontal
-  whitespace. `NEXT` has an explicit `minWidth: '120px'`
-  (`createNextButton`) that's likely wider than the current short
-  label needs; `EXPORT`/`IMPORT` only set `padding: '0 8px'`
-  (`createUtilityButton`), so the extra width may be coming from the
-  site's own `.generalButton`/`.generalButtonBody`/`.generalButtonFace`
-  CSS rather than our styles. Needs live devtools inspection of the box
-  model before changing padding/minWidth, rather than guessing.
-
 - **[P3] FCPLUS-12** — Add icons to the custom topbar buttons (`NEXT`,
   `EXPORT`, `IMPORT`), matching the icon+label style the native buttons
   use (e.g. HINT's bulb icon) instead of text-only labels. Needs an

@@ -12,6 +12,18 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.8.1]
+
+### Fixed
+
+- The custom `NEXT`/`EXPORT`/`IMPORT` topbar buttons were visibly wider
+  than the native UNDO/HINT/NEW ones. `NEXT`'s explicit `minWidth: '120px'`
+  is gone, and both button styles now set `minWidth: '0'` +
+  `boxSizing: 'border-box'` to override whatever width `.generalButton`
+  itself contributes, rather than fighting it with more padding tweaks.
+  Not verified pixel-for-pixel against the native buttons in a browser —
+  worth a visual check. (FCPLUS-11)
+
 ## [0.8.0]
 
 ### Added
