@@ -38,12 +38,6 @@ that closes it; the priority changes, the ID never does.
   icon source/style decision and fitting into the existing
   `generalButtonContent` structure.
 
-- **[P3] FCPLUS-16** — Wrap the `localStorage.setItem` calls in
-  `recordWin`, `importHistory`, and `migrateLegacyStorage` in
-  try/catch. Quota errors or private-browsing restrictions can throw
-  on `setItem`; only `getWinHistory`'s `JSON.parse` is currently
-  guarded.
-
 - **[P3] FCPLUS-17** — The custom topbar buttons are `<div>`s with
   click handlers only — no `role="button"`, `tabindex`, or Enter/Space
   key handling (`createTopBarButton`). Add basic keyboard

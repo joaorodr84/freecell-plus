@@ -31,7 +31,6 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | --- | --- | --- | --- |
 | FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | open | — |
 | FCPLUS-12 | Add icons to the custom topbar buttons | open | — |
-| FCPLUS-16 | Guard localStorage.setItem calls with try/catch | open | — |
 | FCPLUS-17 | Add keyboard accessibility to the custom topbar buttons | open | — |
 | FCPLUS-18 | Fix invalid ?number= values being silently treated as game 1 | open | — |
 | FCPLUS-19 | Add a self-check/fallback for reused native CSS classes changing | open | — |
@@ -57,3 +56,4 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | FCPLUS-13 | Add a separator before the custom button group in the topbar | done | 2026-09-16 | — |
 | FCPLUS-14 | Stop the win-check interval from polling forever after a win | done | 2026-09-16 | — |
 | FCPLUS-15 | Verify/guard against stale currentGame on SPA-style navigation | done | 2026-09-16 | — |
+| FCPLUS-16 | Guard localStorage.setItem calls with try/catch | done | 2026-09-16 | — |

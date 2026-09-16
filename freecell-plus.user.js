@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.9.2
+// @version      0.9.3
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -55,10 +55,24 @@
     const legacyHistory = localStorage.getItem(LEGACY_STORAGE_WIN_HISTORY);
     const legacyLastWon = localStorage.getItem(LEGACY_STORAGE_LAST_WON);
     if (legacyHistory !== null) {
-      localStorage.setItem(STORAGE_WIN_HISTORY, legacyHistory);
+      safeSetItem(STORAGE_WIN_HISTORY, legacyHistory);
     }
     if (legacyLastWon !== null) {
-      localStorage.setItem(STORAGE_LAST_WON, legacyLastWon);
+      safeSetItem(STORAGE_LAST_WON, legacyLastWon);
+    }
+  }
+
+  // localStorage.setItem can throw (quota exceeded, or restrictions some
+  // browsers apply in private/incognito mode) — only getWinHistory's
+  // JSON.parse was guarded before this; swallow and log a write failure
+  // instead of letting it break win tracking outright.
+  function safeSetItem(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (error) {
+      console.error(`[Freecell Plus] Failed to write ${key} to localStorage:`, error);
+      return false;
     }
   }
 
@@ -113,7 +127,7 @@
   // rather than adding a duplicate entry, so history stays one row per
   // game number.
   function recordWin(gameNumber, statistics) {
-    localStorage.setItem(STORAGE_LAST_WON, String(gameNumber));
+    safeSetItem(STORAGE_LAST_WON, String(gameNumber));
 
     const history = getWinHistory();
     const entry = { game: gameNumber, wonAt: new Date().toISOString(), ...statistics };
@@ -125,7 +139,7 @@
     }
     history.sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
 
-    localStorage.setItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
+    safeSetItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
   }
 
   // localStorage doesn't survive a browser/profile switch, so export lets
@@ -196,14 +210,14 @@
           const history = Array.from(merged.values()).sort(
             (a, b) => new Date(b.wonAt) - new Date(a.wonAt)
           );
-          localStorage.setItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
+          safeSetItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
 
           const importedLastWon =
             Number.isFinite(data.lastWon) && data.lastWon >= 1
               ? data.lastWon
               : (history[0] && history[0].game) || null;
           if (importedLastWon !== null) {
-            localStorage.setItem(STORAGE_LAST_WON, String(importedLastWon));
+            safeSetItem(STORAGE_LAST_WON, String(importedLastWon));
           }
 
           updateLastWonLabel();

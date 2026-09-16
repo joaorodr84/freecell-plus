@@ -12,6 +12,16 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.9.3]
+
+### Fixed
+
+- `localStorage.setItem` can throw (quota exceeded, or restrictions some
+  browsers apply in private/incognito mode) — only `getWinHistory`'s
+  `JSON.parse` was guarded before. Added a `safeSetItem()` helper
+  (try/catch + console.error) and routed every `setItem` call through it
+  (`migrateLegacyStorage`, `recordWin`, `importHistory`). (FCPLUS-16)
+
 ## [0.9.2]
 
 ### Fixed
