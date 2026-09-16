@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.3.0
+// @version      0.4.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -13,6 +13,12 @@
 
   const BASE_URL = 'https://www.solitairebliss.com/freecell';
   const BUTTON_ID = 'fcplus-next-game-button';
+  const LAST_WON_LABEL_ID = 'fcplus-last-won-label';
+
+  // Namespaced to avoid colliding with any localStorage keys the site
+  // itself (or another userscript) might use.
+  const STORAGE_LAST_WON = 'fcplus:lastWon';
+  const STORAGE_WIN_HISTORY = 'fcplus:winHistory';
 
   // Solitaire Bliss's own palette/type, lifted from its computed styles,
   // so the button reads as part of the site rather than a bolted-on
@@ -33,6 +39,38 @@
 
   function goToNextGame() {
     window.location.href = `${BASE_URL}?number=${nextGame}`;
+  }
+
+  function getLastWon() {
+    const number = parseInt(localStorage.getItem(STORAGE_LAST_WON), 10);
+    return Number.isFinite(number) && number >= 1 ? number : null;
+  }
+
+  function getWinHistory() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_WIN_HISTORY));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // Replaying an already-won game updates its timestamp rather than
+  // adding a duplicate entry, so history stays one row per game number.
+  function recordWin(gameNumber) {
+    localStorage.setItem(STORAGE_LAST_WON, String(gameNumber));
+
+    const history = getWinHistory();
+    const wonAt = new Date().toISOString();
+    const existing = history.find((entry) => entry.game === gameNumber);
+    if (existing) {
+      existing.wonAt = wonAt;
+    } else {
+      history.push({ game: gameNumber, wonAt });
+    }
+    history.sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
+
+    localStorage.setItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
   }
 
   function createButton() {
@@ -104,11 +142,56 @@
     document.body.appendChild(button);
   }
 
+  function createLastWonLabel() {
+    if (document.getElementById(LAST_WON_LABEL_ID)) {
+      return;
+    }
+
+    const label = document.createElement('div');
+    label.id = LAST_WON_LABEL_ID;
+
+    Object.assign(label.style, {
+      position: 'fixed',
+      right: '22px',
+      bottom: '75px',
+      zIndex: '2147483647',
+
+      padding: '4px 10px',
+      backgroundColor: '#fff7e9',
+      color: COLOR_PRIMARY,
+      border: `1px solid ${COLOR_PRIMARY}`,
+      borderRadius: BORDER_RADIUS_SMALL,
+
+      fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
+      fontSize: '14px',
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      whiteSpace: 'nowrap',
+      userSelect: 'none',
+    });
+
+    document.body.appendChild(label);
+    updateLastWonLabel();
+  }
+
+  function updateLastWonLabel() {
+    const label = document.getElementById(LAST_WON_LABEL_ID);
+    if (!label) {
+      return;
+    }
+
+    const lastWon = getLastWon();
+    label.textContent = lastWon !== null ? `Último ganho: #${lastWon}` : 'Último ganho: —';
+  }
+
   function setWon() {
     if (gameWon) {
       return;
     }
     gameWon = true;
+
+    recordWin(currentGame);
+    updateLastWonLabel();
 
     const button = document.getElementById(BUTTON_ID);
     if (!button) {
@@ -146,6 +229,7 @@
 
   function init() {
     createButton();
+    createLastWonLabel();
     checkForWin();
 
     new MutationObserver(scheduleWinCheck).observe(document.body, {

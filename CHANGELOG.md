@@ -12,6 +12,15 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.4.0]
+
+### Added
+
+- The last game won is remembered across sessions (`localStorage`) and shown
+  in a small label next to the next-game button. Every win is also recorded
+  into a history list (game number + timestamp), not yet surfaced in the UI
+  beyond the last-won label. (FCPLUS-4)
+
 ## [0.3.0]
 
 ### Changed
