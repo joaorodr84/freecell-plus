@@ -38,12 +38,6 @@ that closes it; the priority changes, the ID never does.
   icon source/style decision and fitting into the existing
   `generalButtonContent` structure.
 
-- **[P3] FCPLUS-13** — Add a small vertical separator before our
-  custom button group in the topbar, matching the separator already
-  visible between native button clusters (e.g. between HINT and NEW).
-  Needs devtools inspection to know whether that's a border, a
-  pseudo-element, or a dedicated separator element on the native side.
-
 - **[P2] FCPLUS-14** — `setInterval(checkForWin, 500)` (`init`) never
   stops. Once `gameWon` is true `setWon` no-ops, but the interval
   keeps polling `.generalButtonContent` every 500ms for the rest of

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.8.1
+// @version      0.9.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -371,6 +371,32 @@
     insertIntoTopBar(wrapper);
   }
 
+  // Approximates the divider the native UI shows between button clusters
+  // (e.g. HINT/NEW) as a plain element rather than replicating its exact
+  // mechanism (border vs. pseudo-element vs. dedicated element on the
+  // native side is unconfirmed) — cheap and low-risk either way, but
+  // worth a visual check against the real thing.
+  function createTopBarSeparator() {
+    if (document.getElementById('fcplus-separator')) {
+      return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'gameTopBarBtnsWrap';
+
+    const separator = document.createElement('div');
+    separator.id = 'fcplus-separator';
+    Object.assign(separator.style, {
+      width: '1px',
+      height: '28px',
+      margin: '0 4px',
+      backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    });
+
+    wrapper.appendChild(separator);
+    insertIntoTopBar(wrapper);
+  }
+
   function createImportExportButtons() {
     createUtilityButton('fcplus-export', 'Export', 'Export win history', exportHistory);
     createUtilityButton('fcplus-import', 'Import', 'Import win history', importHistory);
@@ -492,6 +518,7 @@
     }
 
     createTracker();
+    createTopBarSeparator();
     createNextButton();
     createImportExportButtons();
     checkForWin();

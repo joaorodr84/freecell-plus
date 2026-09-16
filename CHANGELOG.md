@@ -12,6 +12,16 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.9.0]
+
+### Added
+
+- A thin vertical separator before our custom button group in the
+  topbar, approximating the divider the native UI shows between button
+  clusters (e.g. HINT/NEW). A plain element rather than a replica of the
+  native mechanism (border/pseudo-element/dedicated element — unconfirmed
+  which), so it's worth a visual check. (FCPLUS-13)
+
 ## [0.8.1]
 
 ### Fixed
