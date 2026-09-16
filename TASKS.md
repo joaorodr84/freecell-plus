@@ -3,7 +3,7 @@
 Every task carries an ID of the form `FCPLUS-<n>`. IDs are assigned once, never
 reused, and never renumbered.
 
-**Next ID to assign: `FCPLUS-9`**
+**Next ID to assign: `FCPLUS-10`**
 
 If this file and history ever disagree, history wins:
 
@@ -42,3 +42,4 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | FCPLUS-7 | Record time/score/moves per win; narrow the export/import buttons | done | 2026-09-16 | — |
 | FCPLUS-3 | Move the next-game button into the game's own button bar instead of floating fixed | done | 2026-09-16 | — |
 | FCPLUS-8 | Sequential next-unplayed-game logic; mount the tracker/buttons in the confirmed native topbar | done | 2026-09-16 | — |
+| FCPLUS-9 | Translate the script's UI text from Portuguese to English | done | 2026-09-16 | — |

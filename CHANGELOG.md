@@ -12,6 +12,13 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.7.1]
+
+### Changed
+
+- All UI text (button labels, the last-won tracker, alert messages) is now
+  in English; it had been Portuguese since the earliest version. (FCPLUS-9)
+
 ## [0.7.0]
 
 ### Added

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.7.0
+// @version      0.7.1
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -202,10 +202,10 @@
           }
 
           updateLastWonLabel();
-          window.alert(`Histórico importado: ${history.length} jogo(s) ganho(s).`);
+          window.alert(`History imported: ${history.length} game(s) won.`);
         } catch (error) {
           console.error('[Freecell Plus] Failed to import history:', error);
-          window.alert('Não foi possível importar o ficheiro de histórico.');
+          window.alert('Could not import the history file.');
         }
       };
       reader.readAsText(file);
@@ -266,7 +266,7 @@
 
     const { wrapper, button } = createTopBarButton(
       'fcplus-next',
-      `PRÓXIMO #${getNextSequentialGame()}`
+      `NEXT #${getNextSequentialGame()}`
     );
 
     Object.assign(button.style, {
@@ -364,8 +364,8 @@
   }
 
   function createImportExportButtons() {
-    createUtilityButton('fcplus-export', 'Exportar', 'Exportar histórico', exportHistory);
-    createUtilityButton('fcplus-import', 'Importar', 'Importar histórico', importHistory);
+    createUtilityButton('fcplus-export', 'Export', 'Export win history', exportHistory);
+    createUtilityButton('fcplus-import', 'Import', 'Import win history', importHistory);
   }
 
   // Mounted into #bsbInner (the game's own status-bar area) rather than
@@ -425,7 +425,7 @@
     }
 
     const lastWon = getLastWon();
-    label.textContent = lastWon !== null ? `Último ganho: #${lastWon}` : 'Último ganho: —';
+    label.textContent = lastWon !== null ? `Last won: #${lastWon}` : 'Last won: —';
   }
 
   function setWon() {
@@ -443,7 +443,7 @@
       return;
     }
 
-    label.textContent = `PRÓXIMO #${getNextSequentialGame()} →`;
+    label.textContent = `NEXT #${getNextSequentialGame()} →`;
     Object.assign(button.style, { cursor: 'pointer', opacity: '1' });
   }
 
