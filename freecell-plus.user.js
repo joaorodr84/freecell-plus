@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.14.0
+// @version      0.14.1
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -99,10 +99,28 @@
     const legacyHistory = localStorage.getItem(LEGACY_STORAGE_WIN_HISTORY);
     const legacyLastWon = localStorage.getItem(LEGACY_STORAGE_LAST_WON);
     if (legacyHistory !== null) {
-      safeSetItem(STORAGE_WIN_HISTORY, legacyHistory);
+      safeSetItem(STORAGE_WIN_HISTORY, sortHistoryJson(legacyHistory));
     }
     if (legacyLastWon !== null) {
       safeSetItem(STORAGE_LAST_WON, legacyLastWon);
+    }
+  }
+
+  // Legacy data predates the ascending-by-wonAt sort recordWin/mergeHistoryEntries
+  // both apply before every write (FCPLUS-25) — copying it over verbatim left a
+  // one-time migration on an old install unsorted until the next win or import
+  // re-sorted it. Falls back to the raw string on unparseable/non-array input so
+  // a corrupt or foreign value still migrates rather than being dropped.
+  function sortHistoryJson(json) {
+    try {
+      const parsed = JSON.parse(json);
+      if (!Array.isArray(parsed)) {
+        return json;
+      }
+      parsed.sort((a, b) => new Date(a.wonAt) - new Date(b.wonAt));
+      return JSON.stringify(parsed);
+    } catch {
+      return json;
     }
   }
 

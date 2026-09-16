@@ -129,6 +129,30 @@ test('migrateLegacyStorage', async (t) => {
     assert.equal(global.localStorage.getItem(STORAGE_WIN_HISTORY), null);
     assert.equal(global.localStorage.getItem(STORAGE_LAST_WON), null);
   });
+
+  await t.test('sorts legacy history ascending by wonAt before copying it over (FCPLUS-25)', () => {
+    global.localStorage.setItem(
+      LEGACY_STORAGE_WIN_HISTORY,
+      JSON.stringify([
+        winEntry(3, '2026-01-03T00:00:00Z'),
+        winEntry(1, '2026-01-01T00:00:00Z'),
+        winEntry(2, '2026-01-02T00:00:00Z'),
+      ])
+    );
+
+    migrateLegacyStorage();
+
+    const migrated = JSON.parse(global.localStorage.getItem(STORAGE_WIN_HISTORY));
+    assert.deepEqual(migrated.map((entry) => entry.game), [1, 2, 3]);
+  });
+
+  await t.test('falls back to the raw string when legacy history is not parseable JSON', () => {
+    global.localStorage.setItem(LEGACY_STORAGE_WIN_HISTORY, 'not json');
+
+    migrateLegacyStorage();
+
+    assert.equal(global.localStorage.getItem(STORAGE_WIN_HISTORY), 'not json');
+  });
 });
 
 test('mergeHistoryEntries', async (t) => {

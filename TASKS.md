@@ -3,7 +3,7 @@
 Every task carries an ID of the form `FCPLUS-<n>`. IDs are assigned once, never
 reused, and never renumbered.
 
-**Next ID to assign: `FCPLUS-25`**
+**Next ID to assign: `FCPLUS-26`**
 
 If this file and history ever disagree, history wins:
 
@@ -34,6 +34,7 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 
 | ID | Task | Status | Date | Commit |
 | --- | --- | --- | --- | --- |
+| FCPLUS-25 | migrateLegacyStorage doesn't sort history ascending when copying legacy data | done | 2026-09-16 | — |
 | FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | done | 2026-09-16 | — |
 | FCPLUS-1 | Add a button to jump to the next numbered game | done | 2026-09-16 | — |
 | FCPLUS-2 | Give the next-game button Solitaire Bliss's own look and detect wins via the real "Deal Again" button | done | 2026-09-16 | — |
