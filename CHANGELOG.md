@@ -12,6 +12,21 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.12.1]
+
+### Changed
+
+- The win-check `MutationObserver` now watches `#gameMainDiv` (confirmed
+  real — the site's own top-level game wrapper) instead of
+  `document.body`, cutting out mutation noise from page chrome outside
+  the game (ads, nav, the once-a-second status-bar timer tick). Not
+  scoped all the way to `#playarea` (the card board) — the end-game
+  dialog's insertion point wasn't confirmed, and it risked missing that
+  mutation if the dialog renders outside it. Falls back to
+  `document.body` if `#gameMainDiv` isn't found. Either way only affects
+  how fast a win is noticed via mutation; the 500ms interval still
+  catches it regardless. (FCPLUS-20)
+
 ## [0.12.0]
 
 ### Added

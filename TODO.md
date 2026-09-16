@@ -32,9 +32,3 @@ that closes it; the priority changes, the ID never does.
     real estate and a decision on which stat "wins" (lowest time vs.
     highest score).
 
-- **[P3] FCPLUS-20** — The `MutationObserver` in `init` watches
-  `document.body` with `subtree: true`, so every drag-and-drop
-  mutation across the whole page triggers the debounced win check.
-  Scope it to a narrower container if a suitable one exists, to cut
-  down on how often `scheduleWinCheck` fires.
-

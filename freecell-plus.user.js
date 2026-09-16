@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.12.0
+// @version      0.12.1
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -36,6 +36,7 @@
   // site-markup change is a one-place fix instead of a grep.
   const ID_TOP_OPTIONS = 'topoptions';
   const ID_GAME_TOP_BAR = 'gameTopBar';
+  const ID_GAME_MAIN = 'gameMainDiv';
   const ID_STATUS_BAR_INNER = 'bsbInner';
   const ID_REPORT_BUG = 'bsbReportBug';
   const ID_END_GAME_TIMER = 'endGameTimerDisp';
@@ -663,7 +664,22 @@
     createImportExportButtons();
     checkForWin();
 
-    new MutationObserver(scheduleWinCheck).observe(document.body, {
+    // #gameMainDiv (confirmed real — the game's own top-level wrapper,
+    // display:block/width:100%/height:100% in the site's real
+    // stylesheet) is a lot narrower than document.body: it excludes
+    // page chrome outside the game (ads, nav, cookie banners) and,
+    // notably, the once-a-second status-bar timer tick, which isn't
+    // inside it. Not scoped all the way down to #playarea (the actual
+    // card board) — the end-game dialog markup is built dynamically and
+    // its insertion point wasn't confirmed, and modals commonly get
+    // appended outside their triggering container to escape overflow/
+    // z-index clipping, so that risked missing the win dialog's
+    // mutation entirely rather than just observing more than strictly
+    // needed. Falls back to document.body if the id isn't there. Either
+    // way this only affects how fast a win is noticed via mutation —
+    // the 500ms interval below still catches it regardless.
+    const observedRoot = document.getElementById(ID_GAME_MAIN) || document.body;
+    new MutationObserver(scheduleWinCheck).observe(observedRoot, {
       childList: true,
       subtree: true,
       characterData: true,
