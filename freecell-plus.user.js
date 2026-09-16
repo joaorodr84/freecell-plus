@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.11.3
+// @version      0.12.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -44,6 +44,20 @@
   const CLASS_BUTTON_CONTENT = 'generalButtonContent';
   const TEXT_DEAL_AGAIN = 'Deal Again';
   const STYLE_ELEMENT_ID = 'fcplus-styles';
+
+  // Solitaire Bliss's own topbar icons (HINT's bulb, etc.) come from a
+  // fixed JPG sprite sheet (.gameIconsSpriteBlock) that has no entries
+  // for actions we invented (next numbered game, export/import) — so
+  // there's nothing of theirs to reuse here. These are plain inline SVG
+  // instead: self-contained (no extra asset request/@grant), and
+  // `currentColor` means they pick up the idle/hover colour for free
+  // from the same CSS that already colours the label text.
+  const ICON_NEXT =
+    '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M5 2l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_EXPORT =
+    '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 10V2M4 6l4-4 4 4M3 12v2h10v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_IMPORT =
+    '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 2v8M4 6l4 4 4-4M3 12v2h10v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   let gameWon = false;
   let winCheckIntervalId = null;
@@ -339,6 +353,10 @@
         cursor: pointer;
         opacity: 1;
       }
+      .fcplus-btn-icon {
+        display: inline-flex;
+        margin-right: 6px;
+      }
       .fcplus-tracker {
         display: flex;
         align-items: center;
@@ -382,7 +400,7 @@
   // body/face/overlay/content structure (confirmed by inspecting the
   // real page) — reusing it, rather than a plain <button>, is what makes
   // ours read as native instead of bolted on.
-  function createTopBarButton(id, label, extraClassName) {
+  function createTopBarButton(id, label, extraClassName, iconSvg) {
     const wrapper = document.createElement('div');
     wrapper.className = 'gameTopBarBtnsWrap';
 
@@ -416,6 +434,16 @@
     const content = document.createElement('div');
     content.className = CLASS_BUTTON_CONTENT;
 
+    // .generalButtonContent is confirmed display:flex on the site's own
+    // stylesheet, so an icon span ahead of the label lays out inline
+    // without us needing to set that ourselves.
+    if (iconSvg) {
+      const icon = document.createElement('span');
+      icon.className = 'fcplus-btn-icon';
+      icon.innerHTML = iconSvg;
+      content.appendChild(icon);
+    }
+
     const labelSpan = document.createElement('span');
     labelSpan.id = `${id}-label`;
     labelSpan.textContent = label;
@@ -438,7 +466,8 @@
     const { wrapper, button } = createTopBarButton(
       'fcplus-next',
       `NEXT #${getNextSequentialGame()}`,
-      'fcplus-btn--next'
+      'fcplus-btn--next',
+      ICON_NEXT
     );
 
     button.addEventListener('click', () => {
@@ -452,14 +481,14 @@
     warnIfNotVisible(button, 'NEXT button');
   }
 
-  function createUtilityButton(id, label, title, onClick) {
+  function createUtilityButton(id, label, title, onClick, iconSvg) {
     if (document.getElementById(id)) {
       return;
     }
 
     // Export/Import are clickable from the start (unlike NEXT), so they
     // get is-ready immediately rather than toggling it later.
-    const { wrapper, button } = createTopBarButton(id, label, 'is-ready');
+    const { wrapper, button } = createTopBarButton(id, label, 'is-ready', iconSvg);
     button.title = title;
 
     button.addEventListener('click', onClick);
@@ -491,8 +520,8 @@
   }
 
   function createImportExportButtons() {
-    createUtilityButton('fcplus-export', 'Export', 'Export win history', exportHistory);
-    createUtilityButton('fcplus-import', 'Import', 'Import win history', importHistory);
+    createUtilityButton('fcplus-export', 'Export', 'Export win history', exportHistory, ICON_EXPORT);
+    createUtilityButton('fcplus-import', 'Import', 'Import win history', importHistory, ICON_IMPORT);
   }
 
   // Mounted into #bsbInner (the game's own status-bar area) rather than

@@ -12,6 +12,20 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.12.0]
+
+### Added
+
+- Icons on the NEXT/EXPORT/IMPORT topbar buttons, matching the
+  icon+label convention the native buttons use (e.g. HINT's bulb). The
+  site's own icons are a fixed JPG sprite sheet with no entries for
+  actions we invented, so these are self-contained inline SVGs using
+  `currentColor` instead — no extra asset request, and they pick up the
+  idle/hover colour for free from the existing button CSS.
+  `.generalButtonContent` is confirmed `display: flex` on the site's own
+  stylesheet, so the icon lays out inline with the label without extra
+  work. (FCPLUS-12)
+
 ## [0.11.3]
 
 ### Changed

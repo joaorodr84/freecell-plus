@@ -32,12 +32,6 @@ that closes it; the priority changes, the ID never does.
     real estate and a decision on which stat "wins" (lowest time vs.
     highest score).
 
-- **[P3] FCPLUS-12** — Add icons to the custom topbar buttons (`NEXT`,
-  `EXPORT`, `IMPORT`), matching the icon+label style the native buttons
-  use (e.g. HINT's bulb icon) instead of text-only labels. Needs an
-  icon source/style decision and fitting into the existing
-  `generalButtonContent` structure.
-
 - **[P3] FCPLUS-20** — The `MutationObserver` in `init` watches
   `document.body` with `subtree: true`, so every drag-and-drop
   mutation across the whole page triggers the debounced win check.
