@@ -38,11 +38,6 @@ that closes it; the priority changes, the ID never does.
   icon source/style decision and fitting into the existing
   `generalButtonContent` structure.
 
-- **[P2] FCPLUS-14** — `setInterval(checkForWin, 500)` (`init`) never
-  stops. Once `gameWon` is true `setWon` no-ops, but the interval
-  keeps polling `.generalButtonContent` every 500ms for the rest of
-  the session anyway. Clear the interval once a win is recorded.
-
 - **[P2] FCPLUS-15** — Verify whether Solitaire Bliss ever changes
   `?number=` via client-side navigation without a full page reload.
   `currentGame` is captured once from the URL at script load

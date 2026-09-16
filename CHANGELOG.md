@@ -12,6 +12,15 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.9.1]
+
+### Fixed
+
+- `setInterval(checkForWin, 500)` ran for the rest of the session even
+  after a win was already recorded — `checkForWin` was a no-op past that
+  point (`setWon` guards on `gameWon`), but the interval itself was never
+  cleared. Now cleared in `setWon()`. (FCPLUS-14)
+
 ## [0.9.0]
 
 ### Added

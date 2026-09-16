@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.9.0
+// @version      0.9.1
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -32,6 +32,7 @@
   const COLOR_LABEL_IDLE = '#9e3c06';
 
   let gameWon = false;
+  let winCheckIntervalId = null;
 
   function getGameNumber() {
     const number = parseInt(new URLSearchParams(window.location.search).get('number'), 10);
@@ -468,6 +469,11 @@
     }
     gameWon = true;
 
+    if (winCheckIntervalId !== null) {
+      clearInterval(winCheckIntervalId);
+      winCheckIntervalId = null;
+    }
+
     recordWin(currentGame, getGameStatistics());
     updateLastWonLabel();
 
@@ -531,7 +537,9 @@
 
     // Belt-and-braces: catches a win state the observer's filters miss
     // (e.g. a style/attribute-only change) without much runtime cost.
-    setInterval(checkForWin, 500);
+    // Cleared in setWon() — otherwise it'd poll .generalButtonContent
+    // every 500ms for the rest of the session after already winning.
+    winCheckIntervalId = setInterval(checkForWin, 500);
   }
 
   // #gameTopBar/#bsbInner are rendered by the site's own SPA after load,
