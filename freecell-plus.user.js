@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.7.1
+// @version      0.8.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/joaorodr84/freecell-plus/main/freecell-plus.user.js
+// @downloadURL  https://raw.githubusercontent.com/joaorodr84/freecell-plus/main/freecell-plus.user.js
 // ==/UserScript==
 
 (function () {

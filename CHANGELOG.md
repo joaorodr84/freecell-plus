@@ -12,6 +12,14 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.8.0]
+
+### Added
+
+- `@updateURL`/`@downloadURL` metadata pointing at the raw GitHub file on
+  `main`, so Tampermonkey can check for and offer updates instead of
+  requiring a manual reinstall for every change. (FCPLUS-10)
+
 ## [0.7.1]
 
 ### Changed
