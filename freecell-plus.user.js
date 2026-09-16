@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.11.2
+// @version      0.11.3
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -43,6 +43,7 @@
   const ID_MOVES_COUNT = 'bsbMovesCount';
   const CLASS_BUTTON_CONTENT = 'generalButtonContent';
   const TEXT_DEAL_AGAIN = 'Deal Again';
+  const STYLE_ELEMENT_ID = 'fcplus-styles';
 
   let gameWon = false;
   let winCheckIntervalId = null;
@@ -281,6 +282,82 @@
     });
   }
 
+  // A single shared stylesheet for our own fcplus- elements, instead of
+  // each of createNextButton/createUtilityButton building its own
+  // near-identical inline style object and hand-swapping hover colours
+  // in mouseenter/mouseleave. JS now only toggles the is-ready class;
+  // real :hover CSS owns the paint. Scoped to fcplus- elements only —
+  // not worth fighting the site's own .generalButton* classes, which
+  // are deliberately reused as-is for structure.
+  function injectStyles() {
+    if (document.getElementById(STYLE_ELEMENT_ID)) {
+      return;
+    }
+
+    const style = document.createElement('style');
+    style.id = STYLE_ELEMENT_ID;
+    style.textContent = `
+      .fcplus-btn {
+        height: 45px;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        font-family: "Open Sans Condensed", Arial, Helvetica, sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: ${COLOR_LABEL_IDLE};
+        border: none;
+        border-radius: 14px;
+        background-color: transparent;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.1s ease, color 0.1s ease;
+      }
+      .fcplus-btn.is-ready:hover {
+        background-color: ${COLOR_ACCENT_HOVER_BG};
+        color: ${COLOR_ACCENT};
+      }
+      .fcplus-btn--next {
+        padding: 0 10px;
+        box-shadow: none;
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+      .fcplus-btn--next.is-ready {
+        cursor: pointer;
+        opacity: 1;
+      }
+      .fcplus-tracker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        box-sizing: border-box;
+        padding: 4px 16px;
+        background-color: rgba(0, 0, 0, 0.12);
+        font-family: "Open Sans Condensed", Arial, Helvetica, sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: #000;
+        white-space: nowrap;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .fcplus-separator {
+        width: 1px;
+        height: 28px;
+        margin: 0 4px;
+        background-color: rgba(0, 0, 0, 0.15);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function insertIntoTopBar(element) {
     const options = document.getElementById(ID_TOP_OPTIONS);
     if (options && options.parentElement) {
@@ -298,13 +375,15 @@
   // body/face/overlay/content structure (confirmed by inspecting the
   // real page) — reusing it, rather than a plain <button>, is what makes
   // ours read as native instead of bolted on.
-  function createTopBarButton(id, label) {
+  function createTopBarButton(id, label, extraClassName) {
     const wrapper = document.createElement('div');
     wrapper.className = 'gameTopBarBtnsWrap';
 
     const button = document.createElement('div');
     button.id = id;
-    button.className = 'generalButton displayInlineFlex';
+    button.className = `generalButton displayInlineFlex fcplus-btn${
+      extraClassName ? ` ${extraClassName}` : ''
+    }`;
 
     // A <div> with only a click handler is invisible to keyboard users —
     // role/tabindex make it focusable and reachable via Tab, and this
@@ -346,56 +425,15 @@
       return;
     }
 
+    // Idle/ready visuals and the :hover swap live in the .fcplus-btn/
+    // .fcplus-btn--next CSS (see injectStyles) — this only toggles the
+    // is-ready class (done in setWon()/resetNextButtonToIdle()).
     const { wrapper, button } = createTopBarButton(
       'fcplus-next',
-      `NEXT #${getNextSequentialGame()}`
+      `NEXT #${getNextSequentialGame()}`,
+      'fcplus-btn--next'
     );
 
-    Object.assign(button.style, {
-      height: '45px',
-      // Overrides whatever min-width .generalButton itself carries —
-      // the button was visibly wider than UNDO/HINT/NEW even before our
-      // own 120px minWidth was added on top of that.
-      minWidth: '0',
-      boxSizing: 'border-box',
-      padding: '0 10px',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-
-      fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
-      fontSize: '24px',
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      color: COLOR_LABEL_IDLE,
-
-      border: 'none',
-      borderRadius: '14px',
-      backgroundColor: 'transparent',
-      boxShadow: 'none',
-
-      // Only interactive once gameWon is true — see setWon().
-      cursor: 'not-allowed',
-      opacity: '0.45',
-      userSelect: 'none',
-      transition: 'background-color 0.1s ease, color 0.1s ease',
-    });
-
-    button.addEventListener('mouseenter', () => {
-      if (!gameWon) {
-        return;
-      }
-      button.style.backgroundColor = COLOR_ACCENT_HOVER_BG;
-      button.style.color = COLOR_ACCENT;
-    });
-    button.addEventListener('mouseleave', () => {
-      if (!gameWon) {
-        return;
-      }
-      button.style.backgroundColor = 'transparent';
-      button.style.color = COLOR_LABEL_IDLE;
-    });
     button.addEventListener('click', () => {
       if (!gameWon) {
         return;
@@ -412,42 +450,12 @@
       return;
     }
 
-    const { wrapper, button } = createTopBarButton(id, label);
+    // Export/Import are clickable from the start (unlike NEXT), so they
+    // get is-ready immediately rather than toggling it later.
+    const { wrapper, button } = createTopBarButton(id, label, 'is-ready');
     button.title = title;
 
-    Object.assign(button.style, {
-      height: '45px',
-      minWidth: '0',
-      boxSizing: 'border-box',
-      padding: '0 8px',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-
-      fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
-      fontSize: '24px',
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      color: COLOR_LABEL_IDLE,
-
-      border: 'none',
-      borderRadius: '14px',
-      backgroundColor: 'transparent',
-      cursor: 'pointer',
-      userSelect: 'none',
-      transition: 'background-color 0.1s ease, color 0.1s ease',
-    });
-
     button.addEventListener('click', onClick);
-    button.addEventListener('mouseenter', () => {
-      button.style.backgroundColor = COLOR_ACCENT_HOVER_BG;
-      button.style.color = COLOR_ACCENT;
-    });
-    button.addEventListener('mouseleave', () => {
-      button.style.backgroundColor = 'transparent';
-      button.style.color = COLOR_LABEL_IDLE;
-    });
 
     insertIntoTopBar(wrapper);
     warnIfNotVisible(button, `${label} button`);
@@ -468,12 +476,7 @@
 
     const separator = document.createElement('div');
     separator.id = 'fcplus-separator';
-    Object.assign(separator.style, {
-      width: '1px',
-      height: '28px',
-      margin: '0 4px',
-      backgroundColor: 'rgba(0, 0, 0, 0.15)',
-    });
+    separator.className = 'fcplus-separator';
 
     wrapper.appendChild(separator);
     insertIntoTopBar(wrapper);
@@ -500,25 +503,7 @@
 
     const tracker = document.createElement('div');
     tracker.id = 'fcplus-tracker';
-
-    Object.assign(tracker.style, {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '40px',
-      boxSizing: 'border-box',
-      padding: '4px 16px',
-      backgroundColor: 'rgba(0, 0, 0, 0.12)',
-
-      fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
-      fontSize: '24px',
-      fontWeight: '700',
-      color: '#000',
-      whiteSpace: 'nowrap',
-
-      userSelect: 'none',
-      flexShrink: '0',
-    });
+    tracker.className = 'fcplus-tracker';
 
     const label = document.createElement('span');
     label.id = 'fcplus-last-won-label';
@@ -567,7 +552,7 @@
     }
 
     label.textContent = `NEXT #${getNextSequentialGame()} →`;
-    Object.assign(button.style, { cursor: 'pointer', opacity: '1' });
+    button.classList.add('is-ready');
   }
 
   function resetNextButtonToIdle() {
@@ -577,7 +562,7 @@
       return;
     }
     label.textContent = `NEXT #${getNextSequentialGame()}`;
-    Object.assign(button.style, { cursor: 'not-allowed', opacity: '0.45' });
+    button.classList.remove('is-ready');
   }
 
   // Every navigation this script performs (loadNextSequentialGame, the
@@ -635,6 +620,7 @@
       return;
     }
 
+    injectStyles();
     createTracker();
     createTopBarSeparator();
     createNextButton();

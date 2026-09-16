@@ -32,7 +32,6 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | open | — |
 | FCPLUS-12 | Add icons to the custom topbar buttons | open | — |
 | FCPLUS-20 | Scope the MutationObserver to a narrower container | open | — |
-| FCPLUS-22 | Move custom button/tracker styling from inline JS to injected CSS | open | — |
 | FCPLUS-23 | Add first unit tests for the pure win-history/game-number logic | open | — |
 
 ## Done
@@ -57,3 +56,4 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | FCPLUS-18 | Fix invalid ?number= values being silently treated as game 1 | done | 2026-09-16 | — |
 | FCPLUS-19 | Add a self-check/fallback for reused native CSS classes changing | done | 2026-09-16 | — |
 | FCPLUS-21 | Extract repeated DOM selector strings into named constants | done | 2026-09-16 | — |
+| FCPLUS-22 | Move custom button/tracker styling from inline JS to injected CSS | done | 2026-09-16 | — |

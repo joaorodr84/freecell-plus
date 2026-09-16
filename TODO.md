@@ -44,18 +44,6 @@ that closes it; the priority changes, the ID never does.
   Scope it to a narrower container if a suitable one exists, to cut
   down on how often `scheduleWinCheck` fires.
 
-- **[P2] FCPLUS-22** — Move the custom button/tracker styling from
-  inline `Object.assign(el.style, {...})` calls into a single injected
-  `<style>` block with CSS classes (no `@grant` needed for this).
-  `createNextButton` and `createUtilityButton` each build a near-
-  identical ~15-property style object today, and hover/idle colours
-  are swapped by hand in `mouseenter`/`mouseleave` listeners — a
-  shared `.fcplus-btn` class plus real `:hover`/`.is-ready:hover` CSS
-  would collapse the duplication and let JS own state (toggling a
-  class) instead of paint. Scope it to the custom `fcplus-` elements
-  only — not worth trying to override the site's own `.generalButton*`
-  classes, since those are deliberately reused as-is.
-
 - **[P3] FCPLUS-23** — Add the first unit tests, for the pure,
   DOM-free logic: `getNextSequentialGame`, the merge logic inside
   `importHistory`, and `migrateLegacyStorage`. `CLAUDE.md`'s own Tests

@@ -12,6 +12,21 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.11.3]
+
+### Changed
+
+- The custom NEXT/EXPORT/IMPORT buttons, tracker, and separator now get
+  their styling from a single injected `<style>` block (`injectStyles()`,
+  scoped to `.fcplus-*` classes) instead of near-identical
+  `Object.assign(el.style, {...})` calls repeated per element. The
+  hover-colour swap and NEXT's idle/ready visuals, previously written by
+  hand in `mouseenter`/`mouseleave` listeners and in `setWon()`/
+  `resetNextButtonToIdle()`, are now real `:hover`/`.is-ready` CSS — JS
+  only toggles the `is-ready` class. Not scoped to the site's own
+  `.generalButton*` classes, which are still reused as-is for structure.
+  Pure refactor, no visual/behavioural change intended. (FCPLUS-22)
+
 ## [0.11.2]
 
 ### Fixed
