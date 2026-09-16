@@ -44,13 +44,6 @@ that closes it; the priority changes, the ID never does.
   Scope it to a narrower container if a suitable one exists, to cut
   down on how often `scheduleWinCheck` fires.
 
-- **[P3] FCPLUS-21** — Extract the repeated magic DOM selectors
-  (`#topoptions`, `#gameTopBar`, `#bsbInner`, `#bsbReportBug`,
-  `.generalButtonContent`, the `'Deal Again'` text match,
-  `#endGameTimerDisp`/`#scoredisp`/`#bsbMovesCount`) into named
-  constants at the top of the file, so a future site-markup change is
-  a one-place fix instead of a grep.
-
 - **[P2] FCPLUS-22** — Move the custom button/tracker styling from
   inline `Object.assign(el.style, {...})` calls into a single injected
   `<style>` block with CSS classes (no `@grant` needed for this).

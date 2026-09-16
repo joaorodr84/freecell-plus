@@ -12,6 +12,18 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.11.1]
+
+### Changed
+
+- The repeated magic DOM selectors (`#topoptions`, `#gameTopBar`,
+  `#bsbInner`, `#bsbReportBug`, `.generalButtonContent`, the `'Deal
+  Again'` text match, `#endGameTimerDisp`/`#scoredisp`/`#bsbMovesCount`)
+  are now named constants near the top of the file instead of string
+  literals scattered across it — a future site-markup change is a
+  one-place fix instead of a grep. Pure refactor, no behaviour change.
+  (FCPLUS-21)
+
 ## [0.11.0]
 
 ### Added

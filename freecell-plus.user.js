@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.11.0
+// @version      0.11.1
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -30,6 +30,19 @@
   const COLOR_ACCENT = '#804817';
   const COLOR_ACCENT_HOVER_BG = '#f1f0e3';
   const COLOR_LABEL_IDLE = '#9e3c06';
+
+  // DOM ids/classes/text confirmed against Solitaire Bliss's real
+  // markup (FCPLUS-2, FCPLUS-8) — named here once so a future
+  // site-markup change is a one-place fix instead of a grep.
+  const ID_TOP_OPTIONS = 'topoptions';
+  const ID_GAME_TOP_BAR = 'gameTopBar';
+  const ID_STATUS_BAR_INNER = 'bsbInner';
+  const ID_REPORT_BUG = 'bsbReportBug';
+  const ID_END_GAME_TIMER = 'endGameTimerDisp';
+  const ID_SCORE_DISPLAY = 'scoredisp';
+  const ID_MOVES_COUNT = 'bsbMovesCount';
+  const CLASS_BUTTON_CONTENT = 'generalButtonContent';
+  const TEXT_DEAL_AGAIN = 'Deal Again';
 
   let gameWon = false;
   let winCheckIntervalId = null;
@@ -123,11 +136,11 @@
   // per field rather than failing outright, in case the dialog hasn't
   // finished rendering statistics when checkForWin's debounce fires.
   function getGameStatistics() {
-    const timerText = document.getElementById('endGameTimerDisp')?.textContent ?? '';
+    const timerText = document.getElementById(ID_END_GAME_TIMER)?.textContent ?? '';
     const time = timerText.replace(/^Time:\s*/i, '').trim() || null;
 
-    const score = parseInt(document.getElementById('scoredisp')?.textContent, 10);
-    const moves = parseInt(document.getElementById('bsbMovesCount')?.textContent, 10);
+    const score = parseInt(document.getElementById(ID_SCORE_DISPLAY)?.textContent, 10);
+    const moves = parseInt(document.getElementById(ID_MOVES_COUNT)?.textContent, 10);
 
     return {
       time,
@@ -269,13 +282,13 @@
   }
 
   function insertIntoTopBar(element) {
-    const options = document.getElementById('topoptions');
+    const options = document.getElementById(ID_TOP_OPTIONS);
     if (options && options.parentElement) {
       options.parentElement.appendChild(element);
       return;
     }
 
-    const topBar = document.getElementById('gameTopBar');
+    const topBar = document.getElementById(ID_GAME_TOP_BAR);
     if (topBar) {
       topBar.appendChild(element);
     }
@@ -315,7 +328,7 @@
     const overlay = document.createElement('div');
     overlay.className = 'generalButtonOverlay';
     const content = document.createElement('div');
-    content.className = 'generalButtonContent';
+    content.className = CLASS_BUTTON_CONTENT;
 
     const labelSpan = document.createElement('span');
     labelSpan.id = `${id}-label`;
@@ -479,7 +492,7 @@
       return;
     }
 
-    const inner = document.getElementById('bsbInner');
+    const inner = document.getElementById(ID_STATUS_BAR_INNER);
     if (!inner) {
       return;
     }
@@ -511,7 +524,7 @@
     label.className = 'statusBarLabels';
     tracker.appendChild(label);
 
-    const reportBug = document.getElementById('bsbReportBug');
+    const reportBug = document.getElementById(ID_REPORT_BUG);
     if (reportBug) {
       inner.insertBefore(tracker, reportBug);
     } else {
@@ -591,9 +604,9 @@
   function checkForWin() {
     syncCurrentGameFromUrl();
 
-    const buttons = document.querySelectorAll('.generalButtonContent');
+    const buttons = document.querySelectorAll(`.${CLASS_BUTTON_CONTENT}`);
     for (const el of buttons) {
-      if (el.textContent.trim() === 'Deal Again') {
+      if (el.textContent.trim() === TEXT_DEAL_AGAIN) {
         setWon();
         return;
       }
@@ -644,7 +657,7 @@
   // not guaranteed to exist yet at document-idle — poll briefly instead
   // of assuming.
   function startWhenReady() {
-    if (document.getElementById('gameTopBar') || document.getElementById('bsbInner')) {
+    if (document.getElementById(ID_GAME_TOP_BAR) || document.getElementById(ID_STATUS_BAR_INNER)) {
       init();
       return;
     }
