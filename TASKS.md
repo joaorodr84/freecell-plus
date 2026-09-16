@@ -3,7 +3,7 @@
 Every task carries an ID of the form `FCPLUS-<n>`. IDs are assigned once, never
 reused, and never renumbered.
 
-**Next ID to assign: `FCPLUS-24`**
+**Next ID to assign: `FCPLUS-25`**
 
 If this file and history ever disagree, history wins:
 
@@ -57,3 +57,4 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | FCPLUS-23 | Add first unit tests for the pure win-history/game-number logic | done | 2026-09-16 | — |
 | FCPLUS-12 | Add icons to the custom topbar buttons | done | 2026-09-16 | — |
 | FCPLUS-20 | Scope the MutationObserver to a narrower container | done | 2026-09-16 | — |
+| FCPLUS-24 | Track every replay as its own win-history entry (GUID id, ascending sort) | done | 2026-09-16 | — |

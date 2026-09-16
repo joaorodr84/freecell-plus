@@ -142,21 +142,30 @@ test('mergeHistoryEntries', async (t) => {
     );
   });
 
-  await t.test('keeps the newer wonAt when the same game appears in both', () => {
+  await t.test('keeps both entries when the same game is won twice with different timestamps', () => {
     const result = mergeHistoryEntries(
       [winEntry(1, '2026-01-01T00:00:00Z')],
       [winEntry(1, '2026-01-05T00:00:00Z')]
     );
-    assert.equal(result.length, 1);
-    assert.equal(result[0].wonAt, '2026-01-05T00:00:00Z');
+    assert.equal(result.length, 2);
+    assert.deepEqual(
+      result.map((entry) => entry.wonAt),
+      ['2026-01-01T00:00:00Z', '2026-01-05T00:00:00Z']
+    );
   });
 
-  await t.test('does not let an older imported entry overwrite a newer local one', () => {
+  await t.test('drops an imported entry that is an exact duplicate (same id) of an existing one', () => {
+    const existing = { ...winEntry(1, '2026-01-01T00:00:00Z'), id: 'abc' };
+    const result = mergeHistoryEntries([existing], [{ ...winEntry(1, '2026-01-01T00:00:00Z'), id: 'abc' }]);
+    assert.equal(result.length, 1);
+  });
+
+  await t.test('drops an imported entry matching an existing one by game+wonAt when neither has an id', () => {
     const result = mergeHistoryEntries(
-      [winEntry(1, '2026-01-05T00:00:00Z')],
+      [winEntry(1, '2026-01-01T00:00:00Z')],
       [winEntry(1, '2026-01-01T00:00:00Z')]
     );
-    assert.equal(result[0].wonAt, '2026-01-05T00:00:00Z');
+    assert.equal(result.length, 1);
   });
 
   await t.test('drops malformed imported entries', () => {
@@ -167,14 +176,14 @@ test('mergeHistoryEntries', async (t) => {
     assert.deepEqual(result, []);
   });
 
-  await t.test('sorts the merged result by wonAt, newest first', () => {
+  await t.test('sorts the merged result by wonAt, oldest first', () => {
     const result = mergeHistoryEntries(
       [winEntry(1, '2026-01-01T00:00:00Z')],
       [winEntry(2, '2026-01-03T00:00:00Z'), winEntry(3, '2026-01-02T00:00:00Z')]
     );
     assert.deepEqual(
       result.map((entry) => entry.game),
-      [2, 3, 1]
+      [1, 3, 2]
     );
   });
 
@@ -183,7 +192,7 @@ test('mergeHistoryEntries', async (t) => {
       [],
       [{ game: 1, wonAt: 't', time: 123, score: 'high', moves: null }]
     );
-    assert.deepEqual(result[0], { game: 1, wonAt: 't', time: null, score: null, moves: null });
+    assert.deepEqual(result[0], { id: null, game: 1, wonAt: 't', time: null, score: null, moves: null });
   });
 });
 
@@ -238,5 +247,11 @@ test('getStatsSummary', async (t) => {
     assert.equal(summary.completed, 2);
     assert.equal(summary.bestScore, null);
     assert.equal(summary.fastest, null);
+  });
+
+  await t.test('counts a replayed game once, not once per entry', () => {
+    const summary = getStatsSummary([statEntry(1, 500, '3:00'), statEntry(1, 600, '2:50')]);
+    assert.equal(summary.completed, 1);
+    assert.deepEqual(summary.bestScore, { game: 1, score: 600 });
   });
 });

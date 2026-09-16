@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.13.0
+// @version      0.14.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -191,8 +191,15 @@
   function getStatsSummary(history) {
     let bestScore = null;
     let fastest = null;
+    // A replay (FCPLUS-24) adds its own history entry rather than
+    // overwriting the last one, so history.length now counts plays, not
+    // distinct games — "completed" needs the distinct game count instead,
+    // otherwise replaying #1 five times would read as "Won: 5".
+    const distinctGames = new Set();
 
     for (const entry of history) {
+      distinctGames.add(entry.game);
+
       if (Number.isFinite(entry.score) && (bestScore === null || entry.score > bestScore.score)) {
         bestScore = { game: entry.game, score: entry.score };
       }
@@ -203,7 +210,7 @@
       }
     }
 
-    return { completed: history.length, bestScore, fastest };
+    return { completed: distinctGames.size, bestScore, fastest };
   }
 
   function formatStatsLabel(summary) {
@@ -217,30 +224,51 @@
     return parts.join(' · ');
   }
 
-  // Replaying an already-won game updates its timestamp (and stats)
-  // rather than adding a duplicate entry, so history stays one row per
-  // game number.
+  // crypto.randomUUID() needs a secure context, which page-injected code
+  // always has here (Tampermonkey with @grant none runs directly in the
+  // https:// page) — the fallback only exists for the Node test
+  // environment, in case it's ever run under a Node build old enough not
+  // to expose a global crypto.
+  function generateId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  // Replaying an already-won game now adds a new history entry instead of
+  // overwriting the previous one (FCPLUS-24) — every completion is kept,
+  // not just the latest. Game number is therefore no longer a unique key
+  // across entries, so each one carries its own id — see
+  // mergeHistoryEntries for why that matters on import.
   function recordWin(gameNumber, statistics) {
     safeSetItem(STORAGE_LAST_WON, String(gameNumber));
 
     const history = getWinHistory();
-    const entry = { game: gameNumber, wonAt: new Date().toISOString(), ...statistics };
-    const existing = history.find((item) => item.game === gameNumber);
-    if (existing) {
-      Object.assign(existing, entry);
-    } else {
-      history.push(entry);
-    }
-    history.sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
+    history.push({
+      id: generateId(),
+      game: gameNumber,
+      wonAt: new Date().toISOString(),
+      ...statistics,
+    });
+    history.sort((a, b) => new Date(a.wonAt) - new Date(b.wonAt));
 
     safeSetItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
   }
 
-  // Extracted from importHistory so the merge logic (dedupe by game
-  // number, keep whichever wonAt is newer, drop anything malformed) is
-  // testable without going through FileReader/localStorage.
+  // Extracted from importHistory so the merge logic is testable without
+  // going through FileReader/localStorage. Dedupes by entry identity (id
+  // when present, else a game+wonAt fallback for entries exported before
+  // FCPLUS-24 added ids) rather than by game number — two genuinely
+  // different wins of the same game number are both kept; only an entry
+  // that's already present (e.g. re-importing the same backup) is
+  // dropped. Sorted ascending by wonAt, oldest first, matching recordWin.
+  function identityKey(entry) {
+    return typeof entry.id === 'string' && entry.id ? entry.id : `${entry.game}:${entry.wonAt}`;
+  }
+
   function mergeHistoryEntries(existingHistory, importedEntries) {
-    const merged = new Map(existingHistory.map((entry) => [entry.game, entry]));
+    const merged = new Map(existingHistory.map((entry) => [identityKey(entry), entry]));
     for (const entry of importedEntries) {
       if (
         !entry ||
@@ -250,19 +278,21 @@
       ) {
         continue;
       }
-      const existing = merged.get(entry.game);
-      if (!existing || new Date(entry.wonAt) > new Date(existing.wonAt)) {
-        merged.set(entry.game, {
-          game: entry.game,
-          wonAt: entry.wonAt,
-          time: typeof entry.time === 'string' ? entry.time : null,
-          score: Number.isFinite(entry.score) ? entry.score : null,
-          moves: Number.isFinite(entry.moves) ? entry.moves : null,
-        });
+      const key = identityKey(entry);
+      if (merged.has(key)) {
+        continue;
       }
+      merged.set(key, {
+        id: typeof entry.id === 'string' && entry.id ? entry.id : null,
+        game: entry.game,
+        wonAt: entry.wonAt,
+        time: typeof entry.time === 'string' ? entry.time : null,
+        score: Number.isFinite(entry.score) ? entry.score : null,
+        moves: Number.isFinite(entry.moves) ? entry.moves : null,
+      });
     }
 
-    return Array.from(merged.values()).sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
+    return Array.from(merged.values()).sort((a, b) => new Date(a.wonAt) - new Date(b.wonAt));
   }
 
   // localStorage doesn't survive a browser/profile switch, so export lets
@@ -311,10 +341,13 @@
           const history = mergeHistoryEntries(getWinHistory(), data.history);
           safeSetItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
 
+          // history is sorted ascending (oldest first, see
+          // mergeHistoryEntries), so the most recent win is the last
+          // entry, not the first.
           const importedLastWon =
             Number.isFinite(data.lastWon) && data.lastWon >= 1
               ? data.lastWon
-              : (history[0] && history[0].game) || null;
+              : (history.length > 0 && history[history.length - 1].game) || null;
           if (importedLastWon !== null) {
             safeSetItem(STORAGE_LAST_WON, String(importedLastWon));
           }
