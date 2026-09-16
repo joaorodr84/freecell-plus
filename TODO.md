@@ -38,11 +38,6 @@ that closes it; the priority changes, the ID never does.
   icon source/style decision and fitting into the existing
   `generalButtonContent` structure.
 
-- **[P3] FCPLUS-17** — The custom topbar buttons are `<div>`s with
-  click handlers only — no `role="button"`, `tabindex`, or Enter/Space
-  key handling (`createTopBarButton`). Add basic keyboard
-  accessibility instead of relying on mouse-only interaction.
-
 - **[P4] FCPLUS-18** — `?number=abc` (an invalid, non-numeric value)
   is treated as "has a number param" by `isBaseGameUrl`, so it skips
   the auto-redirect-to-next-game logic, then `getGameNumber` falls

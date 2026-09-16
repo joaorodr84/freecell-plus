@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.9.3
+// @version      0.10.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -257,6 +257,21 @@
     const button = document.createElement('div');
     button.id = id;
     button.className = 'generalButton displayInlineFlex';
+
+    // A <div> with only a click handler is invisible to keyboard users —
+    // role/tabindex make it focusable and reachable via Tab, and this
+    // relays Enter/Space to the same click handler each caller attaches
+    // afterward (createNextButton/createUtilityButton), rather than
+    // every caller having to wire this up itself.
+    button.setAttribute('role', 'button');
+    button.tabIndex = 0;
+    button.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') {
+        return;
+      }
+      event.preventDefault();
+      button.click();
+    });
 
     const body = document.createElement('div');
     body.className = 'generalButtonBody';

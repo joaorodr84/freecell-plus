@@ -12,6 +12,16 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.10.0]
+
+### Added
+
+- Keyboard accessibility for the custom NEXT/EXPORT/IMPORT topbar
+  buttons: `role="button"`, `tabindex="0"`, and an Enter/Space handler
+  that triggers the same click behaviour, added once in
+  `createTopBarButton()` so it covers all three. Previously mouse-only
+  since they're `<div>`s rather than real `<button>` elements. (FCPLUS-17)
+
 ## [0.9.3]
 
 ### Fixed
