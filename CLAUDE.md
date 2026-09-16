@@ -136,13 +136,27 @@ Freecell Plus is a single userscript, so the version lives where Tampermonkey re
 
 ## Tests
 
-No test suite exists yet. When one is added (unit tests for pure game-logic helpers are the
-obvious first candidate — scoring, move validation, anything that doesn't touch the DOM), this
-section should describe it the way Watchr's does: what suite covers what, what a change owes it,
-and the rule that a bug fix gets the regression test that would have caught it. Until then:
+`test/pure-logic.test.js` (Node's built-in `node:test`, run with `npm test`) covers the
+script's pure, DOM-free logic: `parseGameNumber`, `getNextSequentialGame`, `migrateLegacyStorage`,
+and `mergeHistoryEntries` (the import merge logic, extracted out of `importHistory` so it's
+testable without going through `FileReader`). The script is `require()`d directly — a guard at
+the bottom (`typeof document !== 'undefined'`) skips the browser bootstrap, and a
+`module.exports` block at the very end exposes just those functions — so there's no separate
+copy of the logic to keep in sync. `localStorage` is a plain in-memory shim defined in the test
+file, not the real thing.
 
-- **A user-facing change is checked in a real browser** against Solitaire Bliss before it's
-  called done — there's no automated substitute for that yet.
+Everything that touches the DOM (button creation, win detection, the topbar/status-bar mounting)
+has no automated coverage and isn't a good near-term candidate — it depends entirely on
+Solitaire Bliss's real markup, which is exactly what can't be verified outside a real browser.
+
+- **A change to one of the four covered functions gets its test updated in the same commit.**
+  Not every commit needs new tests — most of this script is DOM glue — but don't let the suite
+  drift out of sync with the functions it does cover.
+- **A bug fix to covered logic gets the regression test that would have caught it**, in the same
+  commit as the fix (e.g. `parseGameNumber`'s zero/negative/non-numeric cases, added
+  alongside FCPLUS-18's fix, are exactly this).
+- **A user-facing or DOM-touching change is still checked in a real browser** against Solitaire
+  Bliss before it's called done — the test suite doesn't substitute for that.
 - **A flaky check is a bug in the check**, not something to retry away, the moment there is one.
 
 ## Comments

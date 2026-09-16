@@ -71,8 +71,10 @@
   }
 
   // Not `const`: syncCurrentGameFromUrl() may reassign this — see there
-  // for why.
-  let currentGame = getGameNumber();
+  // for why. Guarded so this file can also be `require()`d under Node
+  // (no `window`) to unit test the pure functions below — see the
+  // module.exports block at the bottom.
+  let currentGame = typeof window !== 'undefined' ? getGameNumber() : null;
 
   function migrateLegacyStorage() {
     if (localStorage.getItem(STORAGE_WIN_HISTORY) !== null) {
@@ -169,6 +171,35 @@
     safeSetItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
   }
 
+  // Extracted from importHistory so the merge logic (dedupe by game
+  // number, keep whichever wonAt is newer, drop anything malformed) is
+  // testable without going through FileReader/localStorage.
+  function mergeHistoryEntries(existingHistory, importedEntries) {
+    const merged = new Map(existingHistory.map((entry) => [entry.game, entry]));
+    for (const entry of importedEntries) {
+      if (
+        !entry ||
+        !Number.isFinite(entry.game) ||
+        entry.game < 1 ||
+        typeof entry.wonAt !== 'string'
+      ) {
+        continue;
+      }
+      const existing = merged.get(entry.game);
+      if (!existing || new Date(entry.wonAt) > new Date(existing.wonAt)) {
+        merged.set(entry.game, {
+          game: entry.game,
+          wonAt: entry.wonAt,
+          time: typeof entry.time === 'string' ? entry.time : null,
+          score: Number.isFinite(entry.score) ? entry.score : null,
+          moves: Number.isFinite(entry.moves) ? entry.moves : null,
+        });
+      }
+    }
+
+    return Array.from(merged.values()).sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
+  }
+
   // localStorage doesn't survive a browser/profile switch, so export lets
   // you carry the history to another machine and import brings it back.
   function exportHistory() {
@@ -212,31 +243,7 @@
             throw new Error('Missing history array');
           }
 
-          const merged = new Map(getWinHistory().map((entry) => [entry.game, entry]));
-          for (const entry of data.history) {
-            if (
-              !entry ||
-              !Number.isFinite(entry.game) ||
-              entry.game < 1 ||
-              typeof entry.wonAt !== 'string'
-            ) {
-              continue;
-            }
-            const existing = merged.get(entry.game);
-            if (!existing || new Date(entry.wonAt) > new Date(existing.wonAt)) {
-              merged.set(entry.game, {
-                game: entry.game,
-                wonAt: entry.wonAt,
-                time: typeof entry.time === 'string' ? entry.time : null,
-                score: Number.isFinite(entry.score) ? entry.score : null,
-                moves: Number.isFinite(entry.moves) ? entry.moves : null,
-              });
-            }
-          }
-
-          const history = Array.from(merged.values()).sort(
-            (a, b) => new Date(b.wonAt) - new Date(a.wonAt)
-          );
+          const history = mergeHistoryEntries(getWinHistory(), data.history);
           safeSetItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
 
           const importedLastWon =
@@ -651,5 +658,23 @@
     setTimeout(startWhenReady, 100);
   }
 
-  startWhenReady();
+  // Only runs in a real browser (Tampermonkey); guarded so requiring
+  // this file under Node for tests doesn't try to touch `document`.
+  if (typeof document !== 'undefined') {
+    startWhenReady();
+  }
+
+  // Exposes the pure, DOM/localStorage-call-only functions for the
+  // Node test suite under test/ — everything else here needs a real
+  // browser page and is exercised manually per CLAUDE.md's Tests
+  // section instead.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      parseGameNumber,
+      getNextSequentialGame,
+      getWinHistory,
+      migrateLegacyStorage,
+      mergeHistoryEntries,
+    };
+  }
 })();

@@ -44,8 +44,3 @@ that closes it; the priority changes, the ID never does.
   Scope it to a narrower container if a suitable one exists, to cut
   down on how often `scheduleWinCheck` fires.
 
-- **[P3] FCPLUS-23** — Add the first unit tests, for the pure,
-  DOM-free logic: `getNextSequentialGame`, the merge logic inside
-  `importHistory`, and `migrateLegacyStorage`. `CLAUDE.md`'s own Tests
-  section already flags this as the obvious first candidate once a
-  suite exists.
