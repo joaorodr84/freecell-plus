@@ -3,7 +3,7 @@
 Every task carries an ID of the form `FCPLUS-<n>`. IDs are assigned once, never
 reused, and never renumbered.
 
-**Next ID to assign: `FCPLUS-11`**
+**Next ID to assign: `FCPLUS-24`**
 
 If this file and history ever disagree, history wins:
 
@@ -30,6 +30,19 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 | ID | Task | Status | Commit |
 | --- | --- | --- | --- |
 | FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | open | — |
+| FCPLUS-11 | Narrow the custom topbar buttons (NEXT/EXPORT/IMPORT) | open | — |
+| FCPLUS-12 | Add icons to the custom topbar buttons | open | — |
+| FCPLUS-13 | Add a separator before the custom button group in the topbar | open | — |
+| FCPLUS-14 | Stop the win-check interval from polling forever after a win | open | — |
+| FCPLUS-15 | Verify/guard against stale currentGame on SPA-style navigation | open | — |
+| FCPLUS-16 | Guard localStorage.setItem calls with try/catch | open | — |
+| FCPLUS-17 | Add keyboard accessibility to the custom topbar buttons | open | — |
+| FCPLUS-18 | Fix invalid ?number= values being silently treated as game 1 | open | — |
+| FCPLUS-19 | Add a self-check/fallback for reused native CSS classes changing | open | — |
+| FCPLUS-20 | Scope the MutationObserver to a narrower container | open | — |
+| FCPLUS-21 | Extract repeated DOM selector strings into named constants | open | — |
+| FCPLUS-22 | Move custom button/tracker styling from inline JS to injected CSS | open | — |
+| FCPLUS-23 | Add first unit tests for the pure win-history/game-number logic | open | — |
 
 ## Done
 
