@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.4.0
+// @version      0.5.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -14,6 +14,7 @@
   const BASE_URL = 'https://www.solitairebliss.com/freecell';
   const BUTTON_ID = 'fcplus-next-game-button';
   const LAST_WON_LABEL_ID = 'fcplus-last-won-label';
+  const TOOLS_ROW_ID = 'fcplus-tools-row';
 
   // Namespaced to avoid colliding with any localStorage keys the site
   // itself (or another userscript) might use.
@@ -71,6 +72,91 @@
     history.sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
 
     localStorage.setItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
+  }
+
+  // localStorage doesn't survive a browser/profile switch, so export lets
+  // you carry the history to another machine and import brings it back.
+  function exportHistory() {
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      lastWon: getLastWon(),
+      history: getWinHistory(),
+    };
+
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    );
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'freecell-plus-history.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // Merges with the existing history instead of replacing it outright,
+  // so importing an older backup can't wipe out more recent local wins.
+  function importHistory() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data || !Array.isArray(data.history)) {
+            throw new Error('Missing history array');
+          }
+
+          const merged = new Map(getWinHistory().map((entry) => [entry.game, entry]));
+          for (const entry of data.history) {
+            if (
+              !entry ||
+              !Number.isFinite(entry.game) ||
+              entry.game < 1 ||
+              typeof entry.wonAt !== 'string'
+            ) {
+              continue;
+            }
+            const existing = merged.get(entry.game);
+            if (!existing || new Date(entry.wonAt) > new Date(existing.wonAt)) {
+              merged.set(entry.game, { game: entry.game, wonAt: entry.wonAt });
+            }
+          }
+
+          const history = Array.from(merged.values()).sort(
+            (a, b) => new Date(b.wonAt) - new Date(a.wonAt)
+          );
+          localStorage.setItem(STORAGE_WIN_HISTORY, JSON.stringify(history));
+
+          const importedLastWon =
+            Number.isFinite(data.lastWon) && data.lastWon >= 1
+              ? data.lastWon
+              : (history[0] && history[0].game) || null;
+          if (importedLastWon !== null) {
+            localStorage.setItem(STORAGE_LAST_WON, String(importedLastWon));
+          }
+
+          updateLastWonLabel();
+          window.alert(`Histórico importado: ${history.length} jogo(s) ganho(s).`);
+        } catch (error) {
+          console.error('[Freecell Plus] Failed to import history:', error);
+          window.alert('Não foi possível importar o ficheiro de histórico.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    input.click();
   }
 
   function createButton() {
@@ -184,6 +270,66 @@
     label.textContent = lastWon !== null ? `Último ganho: #${lastWon}` : 'Último ganho: —';
   }
 
+  function createToolButton(label, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+
+    Object.assign(button.style, {
+      height: '28px',
+      padding: '0 10px',
+      border: 'none',
+      borderRadius: BORDER_RADIUS_SMALL,
+
+      backgroundColor: COLOR_PRIMARY,
+      color: '#fff7e9',
+
+      fontFamily: '"Open Sans Condensed", Arial, Helvetica, sans-serif',
+      fontSize: '13px',
+      fontWeight: '700',
+      textTransform: 'uppercase',
+
+      cursor: 'pointer',
+      userSelect: 'none',
+      transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
+    });
+
+    button.addEventListener('mouseenter', () => {
+      button.style.backgroundColor = COLOR_PRIMARY_HOVER_BG;
+      button.style.color = COLOR_PRIMARY;
+    });
+    button.addEventListener('mouseleave', () => {
+      button.style.backgroundColor = COLOR_PRIMARY;
+      button.style.color = '#fff7e9';
+    });
+    button.addEventListener('click', onClick);
+
+    return button;
+  }
+
+  function createToolsRow() {
+    if (document.getElementById(TOOLS_ROW_ID)) {
+      return;
+    }
+
+    const row = document.createElement('div');
+    row.id = TOOLS_ROW_ID;
+
+    Object.assign(row.style, {
+      position: 'fixed',
+      right: '22px',
+      bottom: '108px',
+      zIndex: '2147483647',
+      display: 'flex',
+      gap: '8px',
+    });
+
+    row.appendChild(createToolButton('Exportar', exportHistory));
+    row.appendChild(createToolButton('Importar', importHistory));
+
+    document.body.appendChild(row);
+  }
+
   function setWon() {
     if (gameWon) {
       return;
@@ -230,6 +376,7 @@
   function init() {
     createButton();
     createLastWonLabel();
+    createToolsRow();
     checkForWin();
 
     new MutationObserver(scheduleWinCheck).observe(document.body, {

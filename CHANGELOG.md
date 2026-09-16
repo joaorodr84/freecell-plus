@@ -12,6 +12,16 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.5.0]
+
+### Added
+
+- Export/import buttons for the win history, since `localStorage` doesn't
+  follow you to another browser or machine. Export downloads
+  `freecell-plus-history.json`; import merges a backup's entries into the
+  existing history (per-game, keeping whichever timestamp is newer) rather
+  than replacing it outright. (FCPLUS-6)
+
 ## [0.4.0]
 
 ### Added
