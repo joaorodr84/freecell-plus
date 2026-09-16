@@ -12,6 +12,20 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.9.2]
+
+### Fixed
+
+- Added `syncCurrentGameFromUrl()`, called on every `checkForWin` tick,
+  to re-derive `currentGame` from `?number=` and reset `gameWon` if it
+  changes underneath the script. Guards against the (still unconfirmed)
+  possibility that Solitaire Bliss's own "New"/"Deal Again" controls
+  navigate client-side without a full reload — every navigation this
+  script performs already does a full reload, so this only matters for
+  the site's own controls. Not verified live; added as low-cost
+  insurance against a win getting recorded under the wrong game number.
+  (FCPLUS-15)
+
 ## [0.9.1]
 
 ### Fixed

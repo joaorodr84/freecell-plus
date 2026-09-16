@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.9.1
+// @version      0.9.2
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -43,7 +43,9 @@
     return !new URLSearchParams(window.location.search).has('number');
   }
 
-  const currentGame = getGameNumber();
+  // Not `const`: syncCurrentGameFromUrl() may reassign this — see there
+  // for why.
+  let currentGame = getGameNumber();
 
   function migrateLegacyStorage() {
     if (localStorage.getItem(STORAGE_WIN_HISTORY) !== null) {
@@ -487,12 +489,41 @@
     Object.assign(button.style, { cursor: 'pointer', opacity: '1' });
   }
 
+  function resetNextButtonToIdle() {
+    const button = document.getElementById('fcplus-next');
+    const label = document.getElementById('fcplus-next-label');
+    if (!button || !label) {
+      return;
+    }
+    label.textContent = `NEXT #${getNextSequentialGame()}`;
+    Object.assign(button.style, { cursor: 'not-allowed', opacity: '0.45' });
+  }
+
+  // Every navigation this script performs (loadNextSequentialGame, the
+  // NEXT button's click handler) does a full location.href/replace, so
+  // currentGame staying stale isn't a risk from our own code. It's
+  // unconfirmed, though, whether Solitaire Bliss's own "New"/"Deal
+  // Again" controls ever change ?number= via client-side navigation
+  // without a full reload — if they do, this catches it instead of
+  // silently recording a win under the wrong game number.
+  function syncCurrentGameFromUrl() {
+    const urlGame = getGameNumber();
+    if (urlGame === currentGame) {
+      return;
+    }
+    currentGame = urlGame;
+    gameWon = false;
+    resetNextButtonToIdle();
+  }
+
   // The win screen has no dedicated marker, but it does render a
   // "Deal Again" button reusing the site's own .generalButtonContent
   // class (confirmed by inspecting a completed game) — checking for
   // that text is far more reliable than scanning body text for
   // win-related phrases, which is what the first version did.
   function checkForWin() {
+    syncCurrentGameFromUrl();
+
     const buttons = document.querySelectorAll('.generalButtonContent');
     for (const el of buttons) {
       if (el.textContent.trim() === 'Deal Again') {

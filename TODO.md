@@ -38,17 +38,6 @@ that closes it; the priority changes, the ID never does.
   icon source/style decision and fitting into the existing
   `generalButtonContent` structure.
 
-- **[P2] FCPLUS-15** — Verify whether Solitaire Bliss ever changes
-  `?number=` via client-side navigation without a full page reload.
-  `currentGame` is captured once from the URL at script load
-  (`getGameNumber`); every navigation path in the script does a full
-  `location.href`/`location.replace` today, so this is probably fine,
-  but it's unconfirmed against the site's own "New"/"Deal Again"
-  buttons. If it turns out the SPA does navigate client-side, add a
-  guard (e.g. a `popstate`/URL-change listener that re-derives
-  `currentGame` and resets `gameWon`) — otherwise a win could get
-  recorded under the wrong game number.
-
 - **[P3] FCPLUS-16** — Wrap the `localStorage.setItem` calls in
   `recordWin`, `importHistory`, and `migrateLegacyStorage` in
   try/catch. Quota errors or private-browsing restrictions can throw
