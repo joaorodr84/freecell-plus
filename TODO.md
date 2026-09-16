@@ -20,7 +20,8 @@ that closes it; the priority changes, the ID never does.
 - **[P3] FCPLUS-3** — Move the next-game button into the game's own button bar
   (next to "Deal Again") instead of floating fixed bottom-right. Cosmetic only;
   no known selector for the bar's container yet.
-- **[P4] FCPLUS-5** — Win history (`fcplus:winHistory` in localStorage) is
-  recorded but only used for the "last won" label so far. Could drive a
-  completion count (e.g. "8/100 games") or point "next game" at the next
-  *unplayed* number instead of always `current + 1`.
+- **[P4] FCPLUS-5** — Win history (`fcplus:winHistory` in localStorage) now
+  carries time/score/moves per game (FCPLUS-7) but is only used for the
+  "last won" label so far. Could drive a completion count (e.g. "8/100
+  games"), a best-score/fastest-time display, or point "next game" at the
+  next *unplayed* number instead of always `current + 1`.

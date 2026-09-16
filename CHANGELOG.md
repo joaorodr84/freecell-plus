@@ -12,6 +12,27 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.6.0]
+
+### Added
+
+- Each win now records time, score and moves (from the end-game dialog's
+  own `#endGameTimerDisp`/`#scoredisp`/`#bsbMovesCount`), alongside the
+  game number and timestamp already recorded. Export/import carry these
+  automatically since they're just extra fields on the same history
+  entries. (FCPLUS-7)
+
+### Fixed
+
+- Importing a history file dropped any `time`/`score`/`moves` fields on
+  merge, keeping only `game`/`wonAt` — fixed alongside adding those fields
+  so import doesn't regress the moment it has more to preserve. (FCPLUS-7)
+
+### Changed
+
+- Export/Import buttons are a little narrower (`0 8px` padding, from
+  `0 10px`). (FCPLUS-7)
+
 ## [0.5.0]
 
 ### Added

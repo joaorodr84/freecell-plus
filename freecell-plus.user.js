@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.5.0
+// @version      0.6.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -56,18 +56,37 @@
     }
   }
 
-  // Replaying an already-won game updates its timestamp rather than
-  // adding a duplicate entry, so history stays one row per game number.
-  function recordWin(gameNumber) {
+  // The end-game dialog (confirmed via its actual markup) reports these
+  // under #endGameTimerDisp/#scoredisp/#bsbMovesCount. Falls back to null
+  // per field rather than failing outright, in case the dialog hasn't
+  // finished rendering statistics when checkForWin's debounce fires.
+  function getGameStatistics() {
+    const timerText = document.getElementById('endGameTimerDisp')?.textContent ?? '';
+    const time = timerText.replace(/^Time:\s*/i, '').trim() || null;
+
+    const score = parseInt(document.getElementById('scoredisp')?.textContent, 10);
+    const moves = parseInt(document.getElementById('bsbMovesCount')?.textContent, 10);
+
+    return {
+      time,
+      score: Number.isFinite(score) ? score : null,
+      moves: Number.isFinite(moves) ? moves : null,
+    };
+  }
+
+  // Replaying an already-won game updates its timestamp (and stats)
+  // rather than adding a duplicate entry, so history stays one row per
+  // game number.
+  function recordWin(gameNumber, statistics) {
     localStorage.setItem(STORAGE_LAST_WON, String(gameNumber));
 
     const history = getWinHistory();
-    const wonAt = new Date().toISOString();
-    const existing = history.find((entry) => entry.game === gameNumber);
+    const entry = { game: gameNumber, wonAt: new Date().toISOString(), ...statistics };
+    const existing = history.find((item) => item.game === gameNumber);
     if (existing) {
-      existing.wonAt = wonAt;
+      Object.assign(existing, entry);
     } else {
-      history.push({ game: gameNumber, wonAt });
+      history.push(entry);
     }
     history.sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
 
@@ -129,7 +148,13 @@
             }
             const existing = merged.get(entry.game);
             if (!existing || new Date(entry.wonAt) > new Date(existing.wonAt)) {
-              merged.set(entry.game, { game: entry.game, wonAt: entry.wonAt });
+              merged.set(entry.game, {
+                game: entry.game,
+                wonAt: entry.wonAt,
+                time: typeof entry.time === 'string' ? entry.time : null,
+                score: Number.isFinite(entry.score) ? entry.score : null,
+                moves: Number.isFinite(entry.moves) ? entry.moves : null,
+              });
             }
           }
 
@@ -277,7 +302,7 @@
 
     Object.assign(button.style, {
       height: '28px',
-      padding: '0 10px',
+      padding: '0 8px',
       border: 'none',
       borderRadius: BORDER_RADIUS_SMALL,
 
@@ -336,7 +361,7 @@
     }
     gameWon = true;
 
-    recordWin(currentGame);
+    recordWin(currentGame, getGameStatistics());
     updateLastWonLabel();
 
     const button = document.getElementById(BUTTON_ID);
