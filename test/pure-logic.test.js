@@ -33,6 +33,8 @@ const {
   getNextSequentialGame,
   migrateLegacyStorage,
   mergeHistoryEntries,
+  parseTimeToSeconds,
+  getStatsSummary,
 } = require('../freecell-plus.user.js');
 
 // Must match STORAGE_WIN_HISTORY/STORAGE_LAST_WON and the LEGACY_*
@@ -50,6 +52,10 @@ function setHistory(entries) {
 
 function winEntry(game, wonAt) {
   return { game, wonAt, time: null, score: null, moves: null };
+}
+
+function statEntry(game, score, time) {
+  return { game, wonAt: 't', time, score, moves: null };
 }
 
 test('parseGameNumber', async (t) => {
@@ -178,5 +184,59 @@ test('mergeHistoryEntries', async (t) => {
       [{ game: 1, wonAt: 't', time: 123, score: 'high', moves: null }]
     );
     assert.deepEqual(result[0], { game: 1, wonAt: 't', time: null, score: null, moves: null });
+  });
+});
+
+test('parseTimeToSeconds', async (t) => {
+  await t.test('parses M:SS', () => {
+    assert.equal(parseTimeToSeconds('2:15'), 135);
+  });
+
+  await t.test('parses H:MM:SS', () => {
+    assert.equal(parseTimeToSeconds('1:02:15'), 3735);
+  });
+
+  await t.test('parses bare seconds', () => {
+    assert.equal(parseTimeToSeconds('45'), 45);
+  });
+
+  await t.test('rejects non-numeric segments', () => {
+    assert.equal(parseTimeToSeconds('ab:cd'), null);
+  });
+
+  await t.test('rejects null/empty/non-string values', () => {
+    assert.equal(parseTimeToSeconds(null), null);
+    assert.equal(parseTimeToSeconds(''), null);
+    assert.equal(parseTimeToSeconds(undefined), null);
+  });
+});
+
+test('getStatsSummary', async (t) => {
+  await t.test('returns nulls and a zero count for an empty history', () => {
+    assert.deepEqual(getStatsSummary([]), { completed: 0, bestScore: null, fastest: null });
+  });
+
+  await t.test('finds the highest score and lowest time across entries', () => {
+    const summary = getStatsSummary([
+      statEntry(1, 500, '3:00'),
+      statEntry(2, 850, '4:10'),
+      statEntry(3, 300, '2:15'),
+    ]);
+    assert.equal(summary.completed, 3);
+    assert.deepEqual(summary.bestScore, { game: 2, score: 850 });
+    assert.deepEqual(summary.fastest, { game: 3, time: '2:15', seconds: 135 });
+  });
+
+  await t.test('ignores entries with missing score/time when picking each stat', () => {
+    const summary = getStatsSummary([statEntry(1, null, null), statEntry(2, 700, '5:00')]);
+    assert.deepEqual(summary.bestScore, { game: 2, score: 700 });
+    assert.deepEqual(summary.fastest, { game: 2, time: '5:00', seconds: 300 });
+  });
+
+  await t.test('counts every entry even when none have score/time', () => {
+    const summary = getStatsSummary([statEntry(1, null, null), statEntry(2, null, null)]);
+    assert.equal(summary.completed, 2);
+    assert.equal(summary.bestScore, null);
+    assert.equal(summary.fastest, null);
   });
 });

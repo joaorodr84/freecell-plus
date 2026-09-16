@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.12.1
+// @version      0.13.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -167,6 +167,56 @@
     };
   }
 
+  // Time is stored exactly as #endGameTimerDisp renders it (e.g. "2:15",
+  // or "1:02:15" for a game long enough to cross an hour) — split on ":"
+  // and treat the segments as decreasing units (…, hours, minutes,
+  // seconds) rather than assuming a fixed field count, so both formats
+  // resolve to the same total-seconds scale for comparison.
+  function parseTimeToSeconds(time) {
+    if (typeof time !== 'string' || time.trim() === '') {
+      return null;
+    }
+    const parts = time.split(':').map((part) => parseInt(part, 10));
+    if (parts.some((part) => !Number.isFinite(part))) {
+      return null;
+    }
+    return parts.reduce((total, part) => total * 60 + part, 0);
+  }
+
+  // Best score and fastest time are surfaced side by side rather than
+  // picking one as "the" headline stat (the open question TODO.md left
+  // for this task) — they're not comparable on one scale, and showing
+  // both avoids an arbitrary call between "highest score" and "lowest
+  // time" as the thing that matters more.
+  function getStatsSummary(history) {
+    let bestScore = null;
+    let fastest = null;
+
+    for (const entry of history) {
+      if (Number.isFinite(entry.score) && (bestScore === null || entry.score > bestScore.score)) {
+        bestScore = { game: entry.game, score: entry.score };
+      }
+
+      const seconds = parseTimeToSeconds(entry.time);
+      if (seconds !== null && (fastest === null || seconds < fastest.seconds)) {
+        fastest = { game: entry.game, time: entry.time, seconds };
+      }
+    }
+
+    return { completed: history.length, bestScore, fastest };
+  }
+
+  function formatStatsLabel(summary) {
+    const parts = [`Won: ${summary.completed}`];
+    if (summary.bestScore) {
+      parts.push(`Best score: ${summary.bestScore.score} (#${summary.bestScore.game})`);
+    }
+    if (summary.fastest) {
+      parts.push(`Fastest: ${summary.fastest.time} (#${summary.fastest.game})`);
+    }
+    return parts.join(' · ');
+  }
+
   // Replaying an already-won game updates its timestamp (and stats)
   // rather than adding a duplicate entry, so history stays one row per
   // game number.
@@ -270,6 +320,7 @@
           }
 
           updateLastWonLabel();
+          updateStatsLabel();
           window.alert(`History imported: ${history.length} game(s) won.`);
         } catch (error) {
           console.error('[Freecell Plus] Failed to import history:', error);
@@ -568,6 +619,50 @@
     label.textContent = lastWon !== null ? `Last won: #${lastWon}` : 'Last won: —';
   }
 
+  // A second tracker alongside the "Last won" one (FCPLUS-5's "Fuller"
+  // option) rather than folding this into the same label — best
+  // score/fastest time is a different axis from "what did I last win",
+  // and cramming both into one string made the simple case harder to
+  // read for no space actually saved.
+  function createStatsTracker() {
+    if (document.getElementById('fcplus-stats')) {
+      return;
+    }
+
+    const inner = document.getElementById(ID_STATUS_BAR_INNER);
+    if (!inner) {
+      return;
+    }
+
+    const tracker = document.createElement('div');
+    tracker.id = 'fcplus-stats';
+    tracker.className = 'fcplus-tracker';
+
+    const label = document.createElement('span');
+    label.id = 'fcplus-stats-label';
+    label.className = 'statusBarLabels';
+    tracker.appendChild(label);
+
+    const reportBug = document.getElementById(ID_REPORT_BUG);
+    if (reportBug) {
+      inner.insertBefore(tracker, reportBug);
+    } else {
+      inner.appendChild(tracker);
+    }
+
+    updateStatsLabel();
+    warnIfNotVisible(tracker, 'stats tracker');
+  }
+
+  function updateStatsLabel() {
+    const label = document.getElementById('fcplus-stats-label');
+    if (!label) {
+      return;
+    }
+
+    label.textContent = formatStatsLabel(getStatsSummary(getWinHistory()));
+  }
+
   function setWon() {
     if (gameWon) {
       return;
@@ -581,6 +676,7 @@
 
     recordWin(currentGame, getGameStatistics());
     updateLastWonLabel();
+    updateStatsLabel();
 
     const button = document.getElementById('fcplus-next');
     const label = document.getElementById('fcplus-next-label');
@@ -659,6 +755,7 @@
 
     injectStyles();
     createTracker();
+    createStatsTracker();
     createTopBarSeparator();
     createNextButton();
     createImportExportButtons();
@@ -720,6 +817,8 @@
       getWinHistory,
       migrateLegacyStorage,
       mergeHistoryEntries,
+      parseTimeToSeconds,
+      getStatsSummary,
     };
   }
 })();

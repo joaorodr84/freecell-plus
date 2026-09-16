@@ -29,12 +29,12 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 
 | ID | Task | Status | Commit |
 | --- | --- | --- | --- |
-| FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | open | — |
 
 ## Done
 
 | ID | Task | Status | Date | Commit |
 | --- | --- | --- | --- | --- |
+| FCPLUS-5 | Use win history to show completion stats (e.g. "X/100 completed") | done | 2026-09-16 | — |
 | FCPLUS-1 | Add a button to jump to the next numbered game | done | 2026-09-16 | — |
 | FCPLUS-2 | Give the next-game button Solitaire Bliss's own look and detect wins via the real "Deal Again" button | done | 2026-09-16 | — |
 | FCPLUS-4 | Remember the last won game and win history in localStorage | done | 2026-09-16 | — |
