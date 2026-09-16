@@ -3,7 +3,7 @@
 Every task carries an ID of the form `FCPLUS-<n>`. IDs are assigned once, never
 reused, and never renumbered.
 
-**Next ID to assign: `FCPLUS-1`**
+**Next ID to assign: `FCPLUS-2`**
 
 If this file and history ever disagree, history wins:
 
@@ -34,3 +34,4 @@ git log --oneline | grep -oE 'FCPLUS-[0-9]+' | sort -t- -k2 -n | tail -1
 
 | ID | Task | Status | Date | Commit |
 | --- | --- | --- | --- | --- |
+| FCPLUS-1 | Add a button to jump to the next numbered game | done | 2026-09-16 | — |

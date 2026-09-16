@@ -12,6 +12,19 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.2.0]
+
+### Added
+
+- A "next game" button that appears once a numbered game (`?number=`) is won,
+  and jumps straight to the next number. (FCPLUS-1)
+
+### Fixed
+
+- `@match` targeted `/FreeCell*`, but the site serves the page at lowercase
+  `/freecell` and 404s on the capitalised path — the script never ran at all
+  before this fix. (FCPLUS-1)
+
 ## [0.1.0]
 
 ### Added
