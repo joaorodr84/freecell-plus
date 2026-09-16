@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.10.1
+// @version      0.11.0
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -246,6 +246,28 @@
     input.click();
   }
 
+  // Reusing the site's own classes (generalButton*, statusBarLabels)
+  // means a rename/restyle on Solitaire Bliss's side wouldn't throw —
+  // our element would just silently collapse to nothing. Checking after
+  // the fact (next frame, so layout has actually happened) turns that
+  // into a visible console warning instead.
+  function warnIfNotVisible(element, description) {
+    requestAnimationFrame(() => {
+      if (!element.isConnected) {
+        console.warn(
+          `[Freecell Plus] ${description} isn't attached to the DOM — Solitaire Bliss's markup may have changed.`
+        );
+        return;
+      }
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        console.warn(
+          `[Freecell Plus] ${description} rendered with zero size — Solitaire Bliss's markup/CSS may have changed.`
+        );
+      }
+    });
+  }
+
   function insertIntoTopBar(element) {
     const options = document.getElementById('topoptions');
     if (options && options.parentElement) {
@@ -369,6 +391,7 @@
     });
 
     insertIntoTopBar(wrapper);
+    warnIfNotVisible(button, 'NEXT button');
   }
 
   function createUtilityButton(id, label, title, onClick) {
@@ -440,6 +463,7 @@
 
     wrapper.appendChild(separator);
     insertIntoTopBar(wrapper);
+    warnIfNotVisible(button, `${label} button`);
   }
 
   function createImportExportButtons() {
@@ -495,6 +519,7 @@
     }
 
     updateLastWonLabel();
+    warnIfNotVisible(tracker, 'tracker');
   }
 
   function updateLastWonLabel() {

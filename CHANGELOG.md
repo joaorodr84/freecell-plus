@@ -12,6 +12,18 @@ version, newest first.
 Open work is tracked in [TODO.md](TODO.md), and registered by ID in
 [TASKS.md](TASKS.md).
 
+## [0.11.0]
+
+### Added
+
+- `warnIfNotVisible()`, called on the NEXT/EXPORT/IMPORT buttons and the
+  tracker right after each is mounted: if Solitaire Bliss ever renames or
+  restyles the classes we reuse (`generalButton*`, `statusBarLabels`),
+  our elements would previously just silently collapse to nothing. Now
+  it logs a `console.warn` (checked on the next animation frame, so
+  layout has actually happened) if an element isn't attached or renders
+  with zero size. (FCPLUS-19)
+
 ## [0.10.1]
 
 ### Fixed

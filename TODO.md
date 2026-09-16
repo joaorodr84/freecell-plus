@@ -38,12 +38,6 @@ that closes it; the priority changes, the ID never does.
   icon source/style decision and fitting into the existing
   `generalButtonContent` structure.
 
-- **[P4] FCPLUS-19** — Reusing the site's own classes (`generalButton`,
-  `statusBarLabels`, etc., see `createTopBarButton`/`createTracker`)
-  means that if Solitaire Bliss renames or restyles them, our buttons
-  don't error, they just silently look wrong. Consider some form of
-  self-check/fallback so breakage is visible instead of silent.
-
 - **[P3] FCPLUS-20** — The `MutationObserver` in `init` watches
   `document.body` with `subtree: true`, so every drag-and-drop
   mutation across the whole page triggers the debounced win check.
