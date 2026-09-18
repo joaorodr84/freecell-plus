@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Solitaire Bliss FreeCell Plus
 // @namespace    https://github.com/joaorodr84/freecell-plus
-// @version      0.14.1
+// @version      0.14.2
 // @description  Enhancements for Solitaire Bliss FreeCell.
 // @author       Joao Rodrigues
 // @match        https://www.solitairebliss.com/freecell*
@@ -165,6 +165,17 @@
 
   function loadNextSequentialGame() {
     window.location.replace(`${BASE_URL}?number=${getNextSequentialGame()}`);
+  }
+
+  // The NEXT button is about "what's after the level I'm on" (FCPLUS-26)
+  // — currentGame + 1 — not "where does my unplayed streak resume"
+  // (getNextSequentialGame, still correct for the bare-/freecell
+  // redirect above). Those differ once games have been won out of order
+  // or replayed: on ?number=56, NEXT is 57 even if 57 happens to already
+  // be won. A plain function (not a constant computed once) so it stays
+  // correct after syncCurrentGameFromUrl reassigns currentGame.
+  function getNextLevelNumber() {
+    return currentGame + 1;
   }
 
   // The end-game dialog (confirmed via its actual markup) reports these
@@ -568,7 +579,7 @@
     // is-ready class (done in setWon()/resetNextButtonToIdle()).
     const { wrapper, button } = createTopBarButton(
       'fcplus-next',
-      `NEXT #${getNextSequentialGame()}`,
+      `NEXT #${getNextLevelNumber()}`,
       'fcplus-btn--next',
       ICON_NEXT
     );
@@ -577,7 +588,7 @@
       if (!gameWon) {
         return;
       }
-      window.location.href = `${BASE_URL}?number=${getNextSequentialGame()}`;
+      window.location.href = `${BASE_URL}?number=${getNextLevelNumber()}`;
     });
 
     insertIntoTopBar(wrapper);
@@ -735,7 +746,7 @@
       return;
     }
 
-    label.textContent = `NEXT #${getNextSequentialGame()} →`;
+    label.textContent = `NEXT #${getNextLevelNumber()} →`;
     button.classList.add('is-ready');
   }
 
@@ -745,7 +756,7 @@
     if (!button || !label) {
       return;
     }
-    label.textContent = `NEXT #${getNextSequentialGame()}`;
+    label.textContent = `NEXT #${getNextLevelNumber()}`;
     button.classList.remove('is-ready');
   }
 
